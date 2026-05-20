@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BIO DATA</title>
+
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./boot.css" />
+
+  <style>
+    /* BIO 页面专属强化字体 + HUD 样式 */
+
+    .bio-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .bio-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .bio-card {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      border-radius: 16px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: 0.2s ease;
+    }
+
+    .bio-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0,240,255,0.35);
+      box-shadow: 0 0 18px rgba(0,240,255,0.12);
+    }
+
+    .bio-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(255,43,214,0.14), transparent);
+      transform: translateX(-120%);
+      transition: 0.6s;
+      pointer-events: none;
+    }
+
+    .bio-card:hover::after {
+      transform: translateX(120%);
+    }
+
+    /* Avatar HUD */
+    .avatar-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+    }
+
+    .avatar-frame {
+      width: 170px;
+      height: 170px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 2px solid rgba(0,240,255,0.35);
+      box-shadow: 0 0 22px rgba(0,240,255,0.12);
+      background: rgba(0,0,0,0.35);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .avatar-frame::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(140deg, rgba(0,240,255,0.12), transparent 60%);
+      pointer-events: none;
+    }
+
+    .avatar-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      opacity: 0.95;
+      transition: 0.2s ease;
+    }
+
+    .avatar-frame:hover img {
+      transform: scale(1.04);
+      opacity: 1;
+    }
+
+    .bio-name {
+      font-size: 13px;
+      color: var(--yellow);
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px rgba(252,238,9,0.18);
+      line-height: 1.6;
+    }
+
+    .bio-role {
+      font-size: 9px;
+      color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      padding: 8px 12px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .bio-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .bio-tag {
+      font-size: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,240,255,0.18);
+      background: rgba(0,240,255,0.05);
+      color: rgba(255,255,255,0.65);
+    }
+
+    /* Info HUD */
+    .info-title {
+      font-size: 10px;
+      color: rgba(0,240,255,0.95);
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-shadow: 0 0 10px rgba(0,240,255,0.18);
+    }
+
+    .info-block {
+      font-size: 9px;
+      color: rgba(255,255,255,0.78);
+      line-height: 2;
+      white-space: pre-line;
+    }
+
+    .info-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      margin-bottom: 10px;
+    }
+
+    .info-key {
+      color: rgba(255,255,255,0.55);
+      font-size: 8px;
+      letter-spacing: 0.5px;
+      min-width: 90px;
+    }
+
+    .info-value {
+      font-size: 9px;
+      color: rgba(255,255,255,0.85);
+      text-align: right;
+    }
+
+    /* Skill bars */
+    .skill {
+      margin-top: 10px;
+    }
+
+    .skill-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 6px;
+    }
+
+    .skill-bar {
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      overflow: hidden;
+    }
+
+    .skill-fill {
+      height: 100%;
+      width: 50%;
+      background: linear-gradient(90deg, rgba(0,240,255,0.9), rgba(255,43,214,0.8));
+      box-shadow: 0 0 14px rgba(0,240,255,0.15);
+      border-radius: 999px;
+      transition: 0.4s ease;
+    }
+
+    /* Avatar preview overlay */
+    .img-preview {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      padding: 20px;
+    }
+
+    .img-preview img {
+      max-width: 95%;
+      max-height: 90%;
+      border-radius: 14px;
+      border: 1px solid rgba(0,240,255,0.35);
+      box-shadow: 0 0 40px rgba(0,240,255,0.12);
+    }
+
+    .img-preview .close {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      font-size: 20px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .img-preview .close:hover {
+      color: rgba(255,43,214,0.9);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="mouseGlow"></div>
+  <div id="flashTransition"></div>
+
+  <!-- 顶部栏 -->
+  <div id="topNavbar" class="top-navbar">
+    <div class="navbar-left">
+      <span id="sidebarToggleTop" class="nav-icon">☰</span>
+      <span class="nav-brand">CYBER PROFILE</span>
+    </div>
+
+    <div class="navbar-center">
+      <span class="nav-link" onclick="navigateTo('index.html')">主页</span>
+      <span class="nav-link" onclick="navigateTo('bio.html')">简介</span>
+      <span class="nav-link" onclick="navigateTo('projects.html')">项目</span>
+    </div>
+
+    <div class="navbar-right">
+      <span class="nav-link" onclick="navigateTo('blog.html')">日志</span>
+      <span class="nav-link" onclick="navigateTo('socials.html')">社交</span>
+    </div>
+  </div>
+
+  <!-- 侧边栏 -->
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title glitch">导航</span>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+    </div>
+
+    <div class="sidebar-menu">
+      <div class="sidebar-item" onclick="navigateTo('index.html')">主页</div>
+      <div class="sidebar-item" onclick="navigateTo('bio.html')">个人简介</div>
+      <div class="sidebar-item" onclick="navigateTo('history.html')">历史事迹</div>
+      <div class="sidebar-item" onclick="navigateTo('projects.html')">项目档案</div>
+      <div class="sidebar-item" onclick="navigateTo('achievements.html')">成就系统</div>
+      <div class="sidebar-item" onclick="navigateTo('blog.html')">日志系统</div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item" onclick="openAdminPanel()">管理员</div>
+    </div>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="container">
+
+    <div class="topbar">
+      <div>
+        <div class="title glitch" id="username" data-text="CYBER USER"></div>
+        <div class="subtitle" id="tagline"></div>
+        <div class="subtitle" id="randomQuote"></div>
+      </div>
+      <div class="status">MODULE: BIO</div>
+    </div>
+
+    <div class="panel">
+      <a class="btn" href="./index.html">⬅ 返回主页</a>
+      <h2>身份档案 / BIO DATA</h2>
+
+      <div class="bio-grid">
+
+        <!-- 左侧：头像模块 -->
+        <div class="bio-card">
+          <div class="avatar-box">
+            <div class="avatar-frame" id="avatarFrame">
+              <img id="avatarImg" src="" alt="avatar" />
+            </div>
+
+            <div class="bio-name" id="bioName">UNKNOWN USER</div>
+            <div class="bio-role" id="bioRole">SYSTEM ROLE</div>
+
+            <div class="bio-tags" id="bioTags"></div>
+          </div>
+        </div>
+
+        <!-- 右侧：信息模块 -->
+        <div class="bio-card">
+          <div class="info-title">个人信息 / SYSTEM PROFILE</div>
+
+          <div id="bioInfo"></div>
+
+          <div class="info-title" style="margin-top:16px;">简介 / DESCRIPTION</div>
+          <div class="info-block" id="bioDesc"></div>
+
+          <div class="info-title" style="margin-top:16px;">技能参数 / SKILLS</div>
+          <div id="bioSkills"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="footer">
+      © <span id="year"></span> CYBER PROFILE | BIO MODULE
+    </div>
+
+  </div>
+
+  <script src="./app.js"></script>
+  <script src="./background.js"></script>
+  <script src="./effects.js"></script>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    function navigateTo(page) {
+      window.location.href = page;
+    }
+
+    function openAdminPanel() {
+      alert("管理员面板入口（未来可实现登录/发布系统）");
+    }
+
+    document.getElementById("sidebarToggleTop").addEventListener("click", toggleSidebar);
+
+    // ==========================
+    // ⭐ BIO 本地自定义配置（不改 app.js）
+    // ==========================
+    const localBio = {
+      avatar: "https://img.cdn1.vip/i/6a0c95a22e6cd_1779209634.jpg",   // 头像图床链接（可替换）
+      name: "盒子AWA",
+      role: "FRONT-END DEVELOPER",
+      tags: ["HTML", "CSS", "JavaScript", "Cyberpunk UI"],
+
+      info: [
+        { key: "身份编号", value: "USR-2077-ALPHA" },
+        { key: "主机状态", value: "ONLINE" },
+        { key: "核心定位", value: "WEB SYSTEM ARCHITECT" },
+        { key: "作战区域", value: "CYBER SPACE" }
+      ],
+
+      desc:
+        "一个热爱科技风 UI 的前端开发者。\n" +
+        "专注于：网页设计 / HUD 界面 / 动态视觉特效。\n\n" +
+        "当前任务：打造属于自己的个人档案主页。",
+
+      skills: [
+        { name: "HTML / CSS", value: 92 },
+        { name: "JavaScript", value: 85 },
+        { name: "UI DESIGN", value: 76 },
+        { name: "SYSTEM HACKING", value: 66 }
+      ]
+    };
+
+    function openImagePreview(src) {
+      const overlay = document.createElement("div");
+      overlay.className = "img-preview";
+
+      overlay.innerHTML = `
+        <div class="close">✕</div>
+        <img src="${src}" />
+      `;
+
+      overlay.querySelector(".close").addEventListener("click", () => overlay.remove());
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) overlay.remove();
+      });
+
+      document.body.appendChild(overlay);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // 如果 app.js 有 profileData.username，则优先用它
+      const displayName = (window.profileData && profileData.username) ? profileData.username : localBio.name;
+
+      const avatarImg = document.getElementById("avatarImg");
+      const bioName = document.getElementById("bioName");
+      const bioRole = document.getElementById("bioRole");
+      const bioTags = document.getElementById("bioTags");
+      const bioInfo = document.getElementById("bioInfo");
+      const bioDesc = document.getElementById("bioDesc");
+      const bioSkills = document.getElementById("bioSkills");
+      const avatarFrame = document.getElementById("avatarFrame");
+
+      if (avatarImg) {
+        avatarImg.src = localBio.avatar || "";
+        avatarImg.onerror = () => {
+          avatarImg.src = "https://picsum.photos/400/400";
+        };
+      }
+
+      if (bioName) bioName.innerText = displayName;
+      if (bioRole) bioRole.innerText = localBio.role || "UNKNOWN ROLE";
+      if (bioDesc) bioDesc.innerText = localBio.desc || "";
+
+      if (bioTags) {
+        bioTags.innerHTML = "";
+        (localBio.tags || []).forEach(t => {
+          const span = document.createElement("span");
+          span.className = "bio-tag";
+          span.innerText = t;
+          bioTags.appendChild(span);
+        });
+      }
+
+      if (bioInfo) {
+        bioInfo.innerHTML = "";
+        (localBio.info || []).forEach(i => {
+          const div = document.createElement("div");
+          div.className = "info-line";
+          div.innerHTML = `
+            <div class="info-key">${i.key}</div>
+            <div class="info-value">${i.value}</div>
+          `;
+          bioInfo.appendChild(div);
+        });
+      }
+
+      if (bioSkills) {
+        bioSkills.innerHTML = "";
+        (localBio.skills || []).forEach(s => {
+          const block = document.createElement("div");
+          block.className = "skill";
+
+          const safeValue = Math.max(0, Math.min(100, Number(s.value || 0)));
+
+          block.innerHTML = `
+            <div class="skill-head">
+              <span>${s.name}</span>
+              <span>${safeValue}%</span>
+            </div>
+            <div class="skill-bar">
+              <div class="skill-fill" style="width:${safeValue}%"></div>
+            </div>
+          `;
+
+          bioSkills.appendChild(block);
+        });
+      }
+
+      if (avatarFrame && localBio.avatar) {
+        avatarFrame.addEventListener("click", () => openImagePreview(localBio.avatar));
+      }
+    });
+  </script>
+
+</body>
+</html>

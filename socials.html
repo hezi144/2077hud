@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOCIAL NETWORK</title>
+
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./boot.css" />
+
+  <style>
+    /* SOCIAL 页面专属 HUD 样式 */
+
+    .social-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .social-search {
+      flex: 1;
+      min-width: 220px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,240,255,0.25);
+      background: rgba(0,240,255,0.05);
+      color: rgba(255,255,255,0.9);
+      font-size: 9px;
+      outline: none;
+      letter-spacing: 1px;
+    }
+
+    .social-search::placeholder {
+      color: rgba(255,255,255,0.35);
+    }
+
+    .social-meta {
+      font-size: 9px;
+      color: rgba(255,255,255,0.6);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      letter-spacing: 1px;
+    }
+
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .social-card {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      border-radius: 16px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .social-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(0,240,255,0.35);
+      box-shadow: 0 0 18px rgba(0,240,255,0.12);
+    }
+
+    .social-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(255,43,214,0.14), transparent);
+      transform: translateX(-120%);
+      transition: 0.6s;
+      pointer-events: none;
+    }
+
+    .social-card:hover::after {
+      transform: translateX(120%);
+    }
+
+    /* HUD 角标 */
+    .social-card::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 18px;
+      height: 18px;
+      border-top: 2px solid rgba(0,240,255,0.45);
+      border-right: 2px solid rgba(0,240,255,0.45);
+      opacity: 0.6;
+    }
+
+    .social-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .social-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(0,240,255,0.25);
+      background: rgba(0,240,255,0.05);
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 14px rgba(0,240,255,0.08);
+    }
+
+    .social-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.9;
+      transition: 0.2s ease;
+    }
+
+    .social-card:hover .social-icon img {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+
+    .social-name {
+      font-size: 11px;
+      color: var(--yellow);
+      text-shadow: 0 0 10px rgba(252,238,9,0.18);
+      letter-spacing: 1px;
+      line-height: 1.6;
+    }
+
+    .social-user {
+      font-size: 9px;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    .social-desc {
+      font-size: 9px;
+      color: rgba(255,255,255,0.82);
+      line-height: 2;
+      white-space: pre-line;
+      margin-bottom: 10px;
+    }
+
+    .social-url {
+      font-size: 8px;
+      color: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      padding: 8px 10px;
+      border-radius: 999px;
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .empty-social {
+      font-size: 9px;
+      color: rgba(255,255,255,0.55);
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.03);
+      line-height: 2;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="mouseGlow"></div>
+  <div id="flashTransition"></div>
+
+  <!-- 顶部栏 -->
+  <div id="topNavbar" class="top-navbar">
+    <div class="navbar-left">
+      <span id="sidebarToggleTop" class="nav-icon">☰</span>
+      <span class="nav-brand">CYBER PROFILE</span>
+    </div>
+
+    <div class="navbar-center">
+      <span class="nav-link" onclick="navigateTo('index.html')">主页</span>
+      <span class="nav-link" onclick="navigateTo('bio.html')">简介</span>
+      <span class="nav-link" onclick="navigateTo('projects.html')">项目</span>
+    </div>
+
+    <div class="navbar-right">
+      <span class="nav-link" onclick="navigateTo('blog.html')">日志</span>
+      <span class="nav-link" onclick="navigateTo('socials.html')">社交</span>
+    </div>
+  </div>
+
+  <!-- 侧边栏 -->
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title glitch">导航</span>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+    </div>
+
+    <div class="sidebar-menu">
+      <div class="sidebar-item" onclick="navigateTo('index.html')">主页</div>
+      <div class="sidebar-item" onclick="navigateTo('bio.html')">个人简介</div>
+      <div class="sidebar-item" onclick="navigateTo('history.html')">历史事迹</div>
+      <div class="sidebar-item" onclick="navigateTo('projects.html')">项目档案</div>
+      <div class="sidebar-item" onclick="navigateTo('achievements.html')">成就系统</div>
+      <div class="sidebar-item" onclick="navigateTo('blog.html')">日志系统</div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item" onclick="openAdminPanel()">管理员</div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="topbar">
+      <div>
+        <div class="title glitch" id="username" data-text="CYBER USER"></div>
+        <div class="subtitle" id="tagline"></div>
+        <div class="subtitle" id="randomQuote"></div>
+      </div>
+      <div class="status">MODULE: SOCIAL</div>
+    </div>
+
+    <div class="panel">
+      <a class="btn" href="./index.html">⬅ 返回主页</a>
+      <h2>社交网络 / SOCIAL NETWORK</h2>
+
+      <div class="social-toolbar">
+        <input id="socialSearch" class="social-search" placeholder="搜索社交账号...（平台/ID/描述）" />
+        <div class="social-meta" id="socialCount">总数: 0</div>
+      </div>
+
+      <div id="socialLinks" class="social-grid"></div>
+    </div>
+
+    <div class="footer">
+      © <span id="year"></span> CYBER PROFILE | SOCIAL MODULE
+    </div>
+
+  </div>
+
+  <script src="./app.js"></script>
+  <script src="./effects.js"></script>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    function navigateTo(page) {
+      window.location.href = page;
+    }
+
+    function openAdminPanel() {
+      alert("管理员面板入口（未来可实现登录/发布系统）");
+    }
+
+    document.getElementById("sidebarToggleTop").addEventListener("click", toggleSidebar);
+
+    // ==========================
+    // ⭐ 你可以在这里直接新增社交账号（不改 app.js）
+    // icon: 图床图标（可选）
+    // url: 跳转链接
+    // ==========================
+    const localSocials = [
+      {
+        name: "GitHub",
+        user: "@CyberUser",
+        desc: "开源项目 / 代码仓库 / 个人作品集。",
+        url: "https://github.com/",
+        icon: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+      },
+      {
+        name: "Bilibili",
+        user: "UID: 630893908",
+        desc: "开发记录 / 视频 / 作品展示。",
+        url: "https://space.bilibili.com/630893908?spm_id_from=333.1007.0.0",
+        icon: "https://img.cdn1.vip/i/6a0c94fcec076_1779209468.webp"
+      }
+    ];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const list = document.getElementById("socialLinks");
+      const searchInput = document.getElementById("socialSearch");
+      const countEl = document.getElementById("socialCount");
+
+      if (!list || !searchInput || !countEl) return;
+
+      try {
+        if (typeof renderTopbar === "function") renderTopbar();
+        if (typeof setupMouseGlow === "function") setupMouseGlow();
+      } catch(e) {}
+
+      if (typeof profileData !== "undefined") {
+        const u = document.getElementById("username");
+        if (u && profileData.username) u.setAttribute("data-text", profileData.username);
+      }
+
+      const baseSocials = (window.profileData && profileData.socials) ? profileData.socials : [];
+      const socials = [...baseSocials, ...localSocials];
+
+      function render(filtered) {
+        list.innerHTML = "";
+        countEl.innerText = "总数: " + filtered.length;
+
+        if (filtered.length === 0) {
+          list.innerHTML = `
+            <div class="empty-social">
+              未找到任何社交账号。<br/>
+              请修改关键词，或在 localSocials 中新增账号。
+            </div>
+          `;
+          return;
+        }
+
+        filtered.forEach(s => {
+          const div = document.createElement("div");
+          div.className = "social-card";
+
+          const iconHTML = s.icon
+            ? `<img src="${s.icon}" alt="icon" onerror="this.style.display='none'">`
+            : "";
+
+          div.innerHTML = `
+            <div class="social-head">
+              <div class="social-icon">${iconHTML}</div>
+              <div>
+                <div class="social-name">${s.name || "未知平台"}</div>
+                <div class="social-user">${s.user || ""}</div>
+              </div>
+            </div>
+
+            <div class="social-desc">${s.desc || ""}</div>
+
+            <div class="social-url">${s.url || ""}</div>
+          `;
+
+          div.addEventListener("click", () => {
+            if (s.url) window.open(s.url, "_blank");
+          });
+
+          list.appendChild(div);
+        });
+      }
+
+      render(socials);
+
+      searchInput.addEventListener("input", () => {
+        const q = searchInput.value.trim().toLowerCase();
+
+        if (!q) {
+          render(socials);
+          return;
+        }
+
+        const filtered = socials.filter(s => {
+          return (
+            (s.name || "").toLowerCase().includes(q) ||
+            (s.user || "").toLowerCase().includes(q) ||
+            (s.desc || "").toLowerCase().includes(q) ||
+            (s.url || "").toLowerCase().includes(q)
+          );
+        });
+
+        render(filtered);
+      });
+    });
+  </script>
+
+<script src="./background.js"></script>
+
+</body>
+</html>

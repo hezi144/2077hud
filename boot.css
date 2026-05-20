@@ -1,0 +1,143 @@
+/* ====== Glitch Title ====== */
+.glitch {
+  position: relative;
+  color: var(--yellow);
+  text-shadow: 2px 0 var(--cyan), -2px 0 var(--pink);
+  animation: glitch-flicker 2s infinite;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0.75;
+}
+
+.glitch::before {
+  color: var(--cyan);
+  transform: translate(2px, 0);
+  clip-path: inset(0 0 55% 0);
+  animation: glitch-anim 1.6s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+  color: var(--pink);
+  transform: translate(-2px, 0);
+  clip-path: inset(45% 0 0 0);
+  animation: glitch-anim2 1.4s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+  0% { transform: translate(2px, -1px); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(3px, 0); }
+  60% { transform: translate(-3px, -1px); }
+  80% { transform: translate(1px, 2px); }
+  100% { transform: translate(2px, 0); }
+}
+
+@keyframes glitch-anim2 {
+  0% { transform: translate(-2px, 1px); }
+  25% { transform: translate(2px, -1px); }
+  50% { transform: translate(-3px, 0); }
+  75% { transform: translate(3px, 2px); }
+  100% { transform: translate(-2px, 0); }
+}
+
+@keyframes glitch-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+  60% { opacity: 1; }
+  70% { opacity: 0.75; }
+}
+
+/* ====== Boot Screen ====== */
+#bootScreen {
+  position: fixed;
+  inset: 0;
+  background: black;
+  color: var(--green);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+#bootScreen.hidden {
+  display: none;
+}
+
+.boot-box {
+  width: min(680px, 92%);
+  border: 1px solid rgba(0, 255, 157, 0.4);
+  padding: 18px;
+  background: rgba(0, 255, 157, 0.04);
+  border-radius: 12px;
+  box-shadow: 0 0 25px rgba(0, 255, 157, 0.08);
+}
+
+.boot-title {
+  color: var(--cyan);
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+
+.boot-log {
+  line-height: 2;
+  white-space: pre-line;
+  color: rgba(0, 255, 157, 0.85);
+}
+
+.progress {
+  margin-top: 14px;
+  height: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 157, 0.35);
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(0,255,157,0.2), rgba(0,255,157,0.85));
+  transition: 0.2s;
+}
+
+/* ====== Transition Flash ====== */
+#flashTransition {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 240, 255, 0.15);
+  z-index: 1999;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#flashTransition.active {
+  animation: flash 0.45s ease-in-out;
+}
+
+@keyframes flash {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ====== Mouse Glow ====== */
+#mouseGlow {
+  position: fixed;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(0,240,255,0.2), transparent 65%);
+  filter: blur(20px);
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  opacity: 0.8;
+}

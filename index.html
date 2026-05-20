@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CYBER PROFILE</title>
+
+<link rel="stylesheet" href="./style.css" />
+<link rel="stylesheet" href="./boot.css" />
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* ==========================
+     背景画布
+     ========================== */
+  #cyberBg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ==========================
+     扫描线效果
+     ========================== */
+  #scanlines {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.012),
+      rgba(255, 255, 255, 0.012) 1px,
+      transparent 1px,
+      transparent 6px
+    );
+    top: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none;
+    animation: scan 5s linear infinite;
+    opacity: 0.8;
+  }
+
+  @keyframes scan {
+    from { background-position: 0 -2000px; }
+    to { background-position: 0 2000px; }
+  }
+
+  /* ==========================
+     HUD 字体层级优化
+     ========================== */
+  .panel h2 {
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .topbar .title {
+    font-size: 18px;
+    letter-spacing: 3px;
+  }
+
+  .topbar .subtitle {
+    font-size: 9px;
+    letter-spacing: 1px;
+    opacity: 0.85;
+  }
+
+  /* ==========================
+     顶部头像 + 等级 HUD
+     ========================== */
+  .topbar-profile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .hud-avatar {
+    width: 66px;
+    height: 66px;
+    border-radius: 16px;
+    border: 1px solid rgba(252,238,9,0.45);
+    background: rgba(252,238,9,0.05);
+    box-shadow: 0 0 22px rgba(252,238,9,0.12);
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .hud-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: contrast(1.15) saturate(1.2);
+    opacity: 0.92;
+  }
+
+  .hud-avatar::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 7px;
+    width: 14px;
+    height: 14px;
+    border-top: 2px solid rgba(0,240,255,0.55);
+    border-left: 2px solid rgba(0,240,255,0.55);
+    opacity: 0.8;
+  }
+
+  .hud-avatar::after {
+    content: "";
+    position: absolute;
+    bottom: 7px;
+    right: 7px;
+    width: 14px;
+    height: 14px;
+    border-bottom: 2px solid rgba(255,43,214,0.55);
+    border-right: 2px solid rgba(255,43,214,0.55);
+    opacity: 0.8;
+  }
+
+  .hud-avatar .avatar-scan {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      120deg,
+      transparent,
+      rgba(252,238,9,0.25),
+      transparent
+    );
+    transform: translateX(-140%);
+    animation: avatarScan 4.6s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes avatarScan {
+    0% { transform: translateX(-140%); }
+    50% { transform: translateX(140%); }
+    100% { transform: translateX(140%); }
+  }
+
+  .hud-rank {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .rank-label {
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.55);
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    padding: 4px 8px;
+    border-radius: 999px;
+  }
+
+  .rank-value {
+    font-size: 8px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(252,238,9,0.35);
+    background: rgba(252,238,9,0.06);
+    color: rgba(252,238,9,0.95);
+    text-shadow: 0 0 10px rgba(252,238,9,0.18);
+  }
+
+  @media (max-width: 560px) {
+    .hud-avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+    }
+  }
+
+  /* ==========================
+     主菜单 Grid 优化
+     ========================== */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+  }
+
+  /* ==========================
+     菜单卡片 HUD 风格增强
+     ========================== */
+  .card {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    transition: 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(0,240,255,0.35);
+    box-shadow: 0 0 18px rgba(0,240,255,0.12);
+  }
+
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent, rgba(255,43,214,0.14), transparent);
+    transform: translateX(-120%);
+    transition: 0.55s;
+    pointer-events: none;
+  }
+
+  .card:hover::after {
+    transform: translateX(120%);
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+    border-top: 2px solid rgba(0,240,255,0.45);
+    border-right: 2px solid rgba(0,240,255,0.45);
+    opacity: 0.6;
+  }
+
+  .card-title {
+    font-size: 11px;
+    color: var(--yellow);
+    text-shadow: 0 0 10px rgba(252,238,9,0.18);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .card-desc {
+    font-size: 9px;
+    line-height: 2;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 14px;
+  }
+
+  .card .btn {
+    display: inline-block;
+    font-size: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,240,255,0.25);
+    background: rgba(0,240,255,0.05);
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 1px;
+  }
+
+  .card-code {
+    font-size: 8px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  /* ==========================
+     日志推荐文字
+     ========================== */
+  #blogRecommend {
+    font-size: 9px;
+    line-height: 2;
+    color: rgba(255,255,255,0.8);
+  }
+
+  #blogRecommend b {
+    color: var(--yellow);
+    text-shadow: 0 0 10px rgba(252,238,9,0.18);
+    letter-spacing: 1px;
+  }
+
+  /* ==========================
+     音乐播放器 UI
+     ========================== */
+  .cyber-music-player h2 {
+    margin-bottom: 12px;
+  }
+
+  .track-info {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.85);
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    margin-bottom: 12px;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .mp-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,240,255,0.25);
+    background: rgba(0,240,255,0.05);
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s ease;
+  }
+
+  .mp-btn:hover {
+    border-color: rgba(255,43,214,0.35);
+    box-shadow: 0 0 14px rgba(255,43,214,0.12);
+    transform: translateY(-2px);
+  }
+
+  .progress-container {
+    width: 100%;
+    height: 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  #progressBarCustom {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(0,240,255,0.9), rgba(255,43,214,0.8));
+    box-shadow: 0 0 16px rgba(0,240,255,0.15);
+    border-radius: 999px;
+    transition: width 0.12s linear;
+  }
+
+  .time-info {
+    font-size: 9px;
+    margin-top: 10px;
+    color: rgba(255,255,255,0.65);
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  /* ==========================
+     歌词区域（你原本 HTML 里有，但 CSS 没写）
+     ========================== */
+  .lyrics-box {
+    margin-top: 14px;
+    height: 160px;
+    overflow-y: auto;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    font-size: 9px;
+    line-height: 2;
+    color: rgba(255,255,255,0.65);
+  }
+
+  .lyrics-line {
+    padding: 4px 0;
+    opacity: 0.55;
+    transition: 0.2s;
+  }
+
+  .lyrics-line.active {
+    opacity: 1;
+    color: rgba(252,238,9,0.95);
+    text-shadow: 0 0 10px rgba(252,238,9,0.15);
+  }
+
+  /* ==========================
+     HUD 信息条
+     ========================== */
+  .hud-strip {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    font-size: 9px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 1px;
+  }
+
+  .hud-strip span {
+    opacity: 0.9;
+  }
+
+  /* ==========================
+     EFT HEALTH HUD SYSTEM
+     ========================== */
+  .eft-panel-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .eft-panel-title .eft-title-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .eft-badge {
+    font-size: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 1px;
+  }
+
+  .eft-status-big {
+    font-size: 9px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(252,238,9,0.35);
+    background: rgba(252,238,9,0.06);
+    color: rgba(252,238,9,0.95);
+    text-shadow: 0 0 10px rgba(252,238,9,0.14);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .eft-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 900px) {
+    .eft-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .eft-box {
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(0,0,0,0.18);
+    border-radius: 16px;
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .eft-box::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent, rgba(252,238,9,0.10), transparent);
+    transform: translateX(-140%);
+    animation: eftScan 5.4s linear infinite;
+    pointer-events: none;
+    opacity: 0.65;
+  }
+
+  @keyframes eftScan {
+    0% { transform: translateX(-140%); }
+    100% { transform: translateX(140%); }
+  }
+
+  .eft-body-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+  }
+
+  .eft-body-svg {
+    width: 130px;
+    height: 240px;
+    opacity: 0.92;
+    filter: drop-shadow(0 0 12px rgba(252,238,9,0.08));
+  }
+
+  .eft-body-svg .limb {
+    fill: rgba(255,255,255,0.04);
+    stroke: rgba(255,255,255,0.25);
+    stroke-width: 1.2;
+    transition: 0.25s;
+  }
+
+  .eft-body-svg .limb.low {
+    fill: rgba(255,60,60,0.20);
+    stroke: rgba(255,60,60,0.75);
+  }
+
+  .eft-body-svg .limb.critical {
+    fill: rgba(255,0,0,0.35);
+    stroke: rgba(255,0,0,0.95);
+    animation: limbBlink 0.6s infinite alternate;
+  }
+
+  @keyframes limbBlink {
+    from { opacity: 0.35; }
+    to { opacity: 1; }
+  }
+
+  .eft-limb-row {
+    display: grid;
+    grid-template-columns: 62px 1fr 58px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .eft-limb-name {
+    font-size: 9px;
+    color: rgba(255,255,255,0.72);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .eft-limb-value {
+    font-size: 8px;
+    text-align: right;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 1px;
+  }
+
+  .eft-bar {
+    height: 11px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .eft-bar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to right,
+      rgba(255,255,255,0.05),
+      rgba(255,255,255,0.05) 3px,
+      transparent 3px,
+      transparent 9px
+    );
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .eft-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(252,238,9,0.95), rgba(255,43,214,0.65));
+    box-shadow: 0 0 14px rgba(252,238,9,0.12);
+    transition: width 0.35s ease;
+  }
+
+  .eft-fill.low {
+    background: linear-gradient(90deg, rgba(255,60,60,0.95), rgba(252,238,9,0.65));
+    box-shadow: 0 0 18px rgba(255,60,60,0.22);
+  }
+
+  .eft-fill.critical {
+    background: linear-gradient(90deg, rgba(255,0,0,0.95), rgba(140,0,0,0.85));
+    animation: eftBlink 0.55s infinite alternate;
+  }
+
+  @keyframes eftBlink {
+    from { opacity: 0.35; }
+    to { opacity: 1; }
+  }
+
+  .eft-survival {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .eft-stat-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .eft-stat-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .eft-stat-value {
+    font-size: 9px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 1px;
+  }
+
+  .eft-fill.hydration {
+    background: linear-gradient(90deg, rgba(0,240,255,0.95), rgba(252,238,9,0.65));
+    box-shadow: 0 0 14px rgba(0,240,255,0.12);
+  }
+
+  .eft-fill.energy {
+    background: linear-gradient(90deg, rgba(255,43,214,0.90), rgba(252,238,9,0.65));
+    box-shadow: 0 0 14px rgba(255,43,214,0.12);
+  }
+
+  .eft-warning {
+    margin-top: 12px;
+    font-size: 8px;
+    line-height: 1.9;
+    letter-spacing: 1px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px dashed rgba(255,60,60,0.35);
+    background: rgba(255,0,0,0.06);
+    color: rgba(255,180,180,0.85);
+    text-transform: uppercase;
+    opacity: 0.88;
+  }
+
+  .eft-warning.safe {
+    border-color: rgba(0,240,255,0.25);
+    background: rgba(0,240,255,0.05);
+    color: rgba(180,240,255,0.75);
+  }
+
+  /* =======================================================
+     ⭐ 公告弹窗系统（新增）
+     说明：公告会在 Boot 启动动画结束后弹出
+     ======================================================= */
+
+  .announce-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 18px;
+  }
+
+  .announce-window {
+    width: min(820px, 92vw);
+    height: min(560px, 78vh);
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(10,10,15,0.72);
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(0,0,0,0.55);
+  }
+
+  .announce-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+  }
+
+  .announce-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: rgba(252,238,9,0.95);
+    text-transform: uppercase;
+  }
+
+  .announce-sub {
+    font-size: 8px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  .announce-status {
+    font-size: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,240,255,0.25);
+    background: rgba(0,240,255,0.05);
+    color: rgba(0,240,255,0.85);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .announce-progress-wrap {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .announce-progress-text {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 8px;
+  }
+
+  .announce-progress {
+    height: 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    overflow: hidden;
+  }
+
+  .announce-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(252,238,9,0.95), rgba(255,43,214,0.65));
+    border-radius: 999px;
+    transition: width 0.1s linear;
+  }
+
+  .announce-body {
+    padding: 16px;
+    height: calc(100% - 180px);
+    overflow-y: auto;
+    font-size: 10px;
+    line-height: 2.0;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.75);
+  }
+
+  .announce-body h3 {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(252,238,9,0.95);
+    text-transform: uppercase;
+    margin: 10px 0;
+  }
+
+  .announce-body ul {
+    margin-left: 16px;
+  }
+
+  .announce-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+  }
+
+  .announce-tip {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .announce-btn {
+    font-size: 9px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(252,238,9,0.35);
+    background: rgba(252,238,9,0.08);
+    color: rgba(252,238,9,0.95);
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: 0.2s;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .announce-btn.enabled {
+    opacity: 1;
+    pointer-events: auto;
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ==========================
+     ⭐ 首页本地配置（只改这里）
+     ========================== -->
+<script>
+  const HOME_PROFILE = {
+    username: "你的名字",             // 你的名字
+    rank: "传奇黑客 / LEGEND",        // 等级称号
+    avatar: "./avatar.png",           // 头像路径
+    tagline: "前端开发者 / Cyber UI Engineer" // 一句话简介
+  };
+</script>
+
+<!-- ==========================
+     启动界面（不要改）
+     由 boot.css + effects.js 控制
+     ========================== -->
+<div id="bootScreen">
+  <div class="boot-box">
+    <div class="boot-title">系统启动中...</div>
+    <div class="boot-log" id="bootLog"></div>
+    <div class="progress">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================
+     ⭐ 公告弹窗（新增）
+     注意：默认隐藏，由 JS 控制在 Boot 后弹出
+     ========================== -->
+<div id="announceOverlay" class="announce-overlay" style="display:none;">
+  <div class="announce-window">
+
+    <div class="announce-topbar">
+      <div>
+        <div class="announce-title glitch" data-text="SYSTEM ANNOUNCEMENT">
+          系统公告 / ANNOUNCEMENT
+        </div>
+        <div class="announce-sub">
+          请阅读公告内容，滚动到底后才能关闭。
+        </div>
+      </div>
+      <div class="announce-status">NOTICE</div>
+    </div>
+
+    <div class="announce-progress-wrap">
+      <div class="announce-progress-text" id="announceProgressText">
+        阅读进度：0%
+      </div>
+      <div class="announce-progress">
+        <div class="announce-progress-bar" id="announceProgressBar"></div>
+      </div>
+    </div>
+
+    <!-- ==========================
+         ⭐ 公告正文（只改这里）
+         你以后想更新公告内容，就只改这里
+         ========================== -->
+    <div class="announce-body" id="announceBody">
+      <h3>更新说明 / PATCH NOTES</h3>
+
+      <p>
+        欢迎进入 CYBER PROFILE 系统。
+        这是一个用于展示个人信息 / 项目 / 成就的 HUD 风格网站。
+      </p>
+
+      <ul>
+        <li>✅ 新增：EFT 风格角色健康面板</li>
+        <li>✅ 新增：音乐播放器 + 歌词同步</li>
+        <li>✅ 新增：公告系统（阅读进度锁定）</li>
+        <li>🟡 优化：UI 渲染、字体、层级</li>
+      </ul>
+
+      <h3>免责声明 / DISCLAIMER</h3>
+
+      <p>
+        本页面中的防火墙扫描、系统日志、等级模块等内容均为 UI 模拟效果，
+        不代表真实系统能力。
+      </p>
+
+      <p style="opacity:0.75;">
+        滚动到底以解锁关闭权限。
+      </p>
+
+      <div style="height:120px;"></div>
+      <p style="opacity:0.6;">[END OF FILE]</p>
+    </div>
+
+    <div class="announce-footer">
+      <div class="announce-tip" id="announceTip">
+        状态：未完成阅读
+      </div>
+      <button class="announce-btn" id="announceCloseBtn">
+        关闭公告
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- 顶部导航栏 -->
+<div id="topNavbar" class="top-navbar">
+  <div class="navbar-left">
+    <span id="sidebarToggleTop" class="nav-icon">☰</span>
+    <span class="nav-brand">CYBER PROFILE</span>
+  </div>
+
+  <div class="navbar-center">
+    <span class="nav-link" onclick="navigateTo('bio.html')">简介</span>
+    <span class="nav-link" onclick="navigateTo('history.html')">事迹</span>
+    <span class="nav-link" onclick="navigateTo('projects.html')">项目</span>
+  </div>
+
+  <div class="navbar-right">
+    <span class="nav-link" onclick="navigateTo('blog.html')">日志</span>
+    <span class="nav-link" onclick="navigateTo('socials.html')">社交</span>
+  </div>
+</div>
+
+<!-- 背景 -->
+<canvas id="cyberBg"></canvas>
+<div id="scanlines"></div>
+
+<div id="mouseGlow"></div>
+<div id="flashTransition"></div>
+
+<!-- 侧边栏导航 -->
+<div id="sidebar" class="sidebar">
+  <div class="sidebar-header">
+    <span class="sidebar-title glitch">导航</span>
+    <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+  </div>
+
+  <div class="sidebar-menu">
+    <div class="sidebar-item" onclick="navigateTo('bio.html')">个人简介</div>
+    <div class="sidebar-item" onclick="navigateTo('history.html')">历史事迹</div>
+    <div class="sidebar-item" onclick="navigateTo('socials.html')">社交网络</div>
+    <div class="sidebar-item" onclick="navigateTo('projects.html')">项目档案</div>
+    <div class="sidebar-item" onclick="navigateTo('achievements.html')">成就系统</div>
+    <div class="sidebar-item" onclick="navigateTo('blog.html')">日志系统</div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-item" onclick="openAdminPanel()">管理员</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 顶部用户 HUD -->
+  <div class="topbar">
+
+    <div class="topbar-profile">
+
+      <!-- 头像模块 -->
+      <div class="hud-avatar">
+        <img id="avatarImg" src="./avatar.png" alt="avatar">
+        <div class="avatar-scan"></div>
+      </div>
+
+      <!-- 用户信息 -->
+      <div>
+        <div class="title glitch" id="username" data-text="CYBER USER"></div>
+        <div class="subtitle" id="tagline"></div>
+
+        <!-- 等级系统 -->
+        <div class="hud-rank">
+          <span class="rank-label">等级</span>
+          <span class="rank-value" id="userRank">ROOKIE</span>
+        </div>
+
+        <!-- 名言系统 -->
+        <div class="subtitle" id="randomQuote"
+             style="margin-top:8px; font-size:9px; color:var(--muted);"></div>
+      </div>
+
+    </div>
+
+    <div class="status">系统状态：在线</div>
+  </div>
+
+  <!-- HUD 信息条 -->
+  <div class="hud-strip">
+    <span id="hudTime">TIME: --:--</span>
+    <span id="hudStatus">NODE: CONNECTED</span>
+    <span id="hudVersion">HUD: v2.07</span>
+  </div>
+
+  <div class="panel">
+    <h2>主菜单 / MAIN MENU</h2>
+
+    <div class="grid">
+
+      <div class="card" onclick="navigateTo('bio.html')">
+        <div class="card-title">个人简介</div>
+        <div class="card-desc">查看身份档案、技术方向、自我介绍与技能参数。</div>
+        <span class="btn">进入模块</span>
+        <div class="card-code">MODULE: BIO</div>
+      </div>
+
+      <div class="card" onclick="navigateTo('history.html')">
+        <div class="card-title">历史事迹</div>
+        <div class="card-desc">查看成长经历、关键节点与重要事件时间轴。</div>
+        <span class="btn">进入模块</span>
+        <div class="card-code">MODULE: HISTORY</div>
+      </div>
+
+      <div class="card" onclick="navigateTo('socials.html')">
+        <div class="card-title">社交网络</div>
+        <div class="card-desc">访问我的社交媒体主页、联系方式与外部链接。</div>
+        <span class="btn">进入模块</span>
+        <div class="card-code">MODULE: SOCIAL</div>
+      </div>
+
+      <div class="card" onclick="navigateTo('projects.html')">
+        <div class="card-title">项目档案馆</div>
+        <div class="card-desc">浏览项目 Demo、GitHub 仓库、技术栈与开发记录。</div>
+        <span class="btn">进入模块</span>
+        <div class="card-code">MODULE: PROJECTS</div>
+      </div>
+
+      <div class="card" onclick="navigateTo('achievements.html')">
+        <div class="card-title">成就系统</div>
+        <div class="card-desc">查看解锁成就、等级徽章与系统奖励记录。</div>
+        <span class="btn">进入模块</span>
+        <div class="card-code">MODULE: ACHIEVEMENTS</div>
+      </div>
+
+      <div class="card" onclick="navigateTo('blog.html')">
+        <div class="card-title">日志系统</div>
+        <div class="card-desc">系统日志 / 学习记录 / 开发笔记 / 随手存档。</div>
+        <span class="btn">进入模块</span>
+        <div class="card-code">MODULE: BLOG</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- EFT HEALTH PANEL -->
+  <div class="panel">
+    <div class="eft-panel-title">
+      <div class="eft-title-left">
+        <h2 style="margin:0;">角色状态 / HEALTH</h2>
+        <span class="eft-badge">EFT HUD</span>
+      </div>
+      <div class="eft-status-big" id="eft-statusText">UNKNOWN</div>
+    </div>
+
+    <div class="eft-grid">
+
+      <div class="eft-box">
+        <div class="eft-body-wrap">
+          <svg class="eft-body-svg" viewBox="0 0 120 240">
+            <circle id="limb-head" class="limb" cx="60" cy="25" r="18"/>
+            <rect id="limb-chest" class="limb" x="40" y="48" width="40" height="45" rx="10"/>
+            <rect id="limb-stomach" class="limb" x="42" y="96" width="36" height="42" rx="10"/>
+            <rect id="limb-arm-l" class="limb" x="18" y="55" width="18" height="65" rx="8"/>
+            <rect id="limb-arm-r" class="limb" x="84" y="55" width="18" height="65" rx="8"/>
+            <rect id="limb-leg-l" class="limb" x="42" y="145" width="16" height="80" rx="8"/>
+            <rect id="limb-leg-r" class="limb" x="62" y="145" width="16" height="80" rx="8"/>
+          </svg>
+        </div>
+
+        <div class="eft-warning safe" id="eft-warningBox">
+          防火墙扫描中...<br/>
+          生理指标检测中...
+        </div>
+      </div>
+
+      <div class="eft-box">
+
+        <div class="eft-limb-row">
+          <div class="eft-limb-name">头部</div>
+          <div class="eft-bar"><div class="eft-fill" id="hp-head"></div></div>
+          <div class="eft-limb-value" id="hp-head-text">0/0</div>
+        </div>
+
+        <div class="eft-limb-row">
+          <div class="eft-limb-name">胸腔</div>
+          <div class="eft-bar"><div class="eft-fill" id="hp-chest"></div></div>
+          <div class="eft-limb-value" id="hp-chest-text">0/0</div>
+        </div>
+
+        <div class="eft-limb-row">
+          <div class="eft-limb-name">胃部</div>
+          <div class="eft-bar"><div class="eft-fill" id="hp-stomach"></div></div>
+          <div class="eft-limb-value" id="hp-stomach-text">0/0</div>
+        </div>
+
+        <div class="eft-limb-row">
+          <div class="eft-limb-name">左臂</div>
+          <div class="eft-bar"><div class="eft-fill" id="hp-arm-l"></div></div>
+          <div class="eft-limb-value" id="hp-arm-l-text">0/0</div>
+        </div>
+
+        <div class="eft-limb-row">
+          <div class="eft-limb-name">右臂</div>
+          <div class="eft-bar"><div class="eft-fill" id="hp-arm-r"></div></div>
+          <div class="eft-limb-value" id="hp-arm-r-text">0/0</div>
+        </div>
+
+        <div class="eft-limb-row">
+          <div class="eft-limb-name">左腿</div>
+          <div class="eft-bar"><div class="eft-fill" id="hp-leg-l"></div></div>
+          <div class="eft-limb-value" id="hp-leg-l-text">0/0</div>
+        </div>
+
+        <div class="eft-limb-row">
+          <div class="eft-limb-name">右腿</div>
+          <div class="eft-bar"><div class="eft-fill" id="hp-leg-r"></div></div>
+          <div class="eft-limb-value" id="hp-leg-r-text">0/0</div>
+        </div>
+
+        <div style="height:10px;"></div>
+
+        <div class="eft-survival">
+          <div class="eft-stat-line">
+            <span class="eft-stat-label">口渴 / HYDRATION</span>
+            <span class="eft-stat-value" id="eft-hydrationText">0%</span>
+          </div>
+          <div class="eft-bar">
+            <div class="eft-fill hydration" id="eft-hydrationBar"></div>
+          </div>
+
+          <div class="eft-stat-line">
+            <span class="eft-stat-label">饥饿 / ENERGY</span>
+            <span class="eft-stat-value" id="eft-energyText">0%</span>
+          </div>
+          <div class="eft-bar">
+            <div class="eft-fill energy" id="eft-energyBar"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 音乐播放器 -->
+  <div class="cyber-music-player panel">
+    <h2>音乐播放器 / MUSIC PLAYER</h2>
+
+    <div class="player-ui">
+      <div class="track-info" id="trackName">♪ 未播放曲目</div>
+
+      <div class="controls">
+        <button id="prevBtn" class="mp-btn">⏮</button>
+        <button id="playPauseBtn" class="mp-btn">▶</button>
+        <button id="nextBtn" class="mp-btn">⏭</button>
+      </div>
+
+      <div class="progress-container" id="progressContainer">
+        <div id="progressBarCustom"></div>
+      </div>
+
+      <div class="time-info">
+        <span id="currentTime">00:00</span> /
+        <span id="durationTime">00:00</span>
+      </div>
+
+      <!-- 歌词显示 -->
+      <div class="lyrics-box" id="lyricsBox">
+        <div class="lyrics-line active">♪ 歌词加载中...</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>日志推荐 / SYSTEM FEED</h2>
+    <div class="text" id="blogRecommend"></div>
+  </div>
+
+  <div class="footer">
+    © <span id="year"></span> CYBER PROFILE | HUD SYSTEM ONLINE
+  </div>
+
+</div>
+
+<script src="./app.js"></script>
+<script src="./effects.js"></script>
+
+<script>
+/* ==========================
+   侧边栏控制（不要改）
+   ========================== */
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("open");
+}
+
+/* ==========================
+   页面跳转（你可以自定义）
+   ========================== */
+function navigateTo(page) {
+  window.location.href = page;
+}
+
+/* ==========================
+   ADMIN 功能入口（可改）
+   ========================== */
+function openAdminPanel() {
+  alert("管理员面板入口（未来可实现登录/发布博客系统）");
+}
+
+document.getElementById("sidebarToggleTop").addEventListener("click", toggleSidebar);
+</script>
+
+<!-- ==========================
+     EFT HEALTH SYSTEM DATA
+     ⭐ 你以后只改这里即可
+     ========================== -->
+<script>
+const EFT_PROFILE = {
+  hydration: 76,
+  energy: 61,
+  limbs: {
+    head:     { current: 32, max: 35 },
+    chest:    { current: 70, max: 85 },
+    stomach:  { current: 45, max: 70 },
+    armL:     { current: 55, max: 60 },
+    armR:     { current: 40, max: 60 },
+    legL:     { current: 65, max: 65 },
+    legR:     { current: 52, max: 65 }
+  }
+};
+</script>
+
+<script>
+/* ==========================
+   EFT HEALTH 渲染逻辑（不要改）
+   ========================== */
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function setBar(barEl, percent) {
+  percent = clamp(percent, 0, 100);
+  barEl.style.width = percent + "%";
+
+  barEl.classList.remove("low", "critical");
+
+  if (percent <= 30) barEl.classList.add("low");
+  if (percent <= 12) barEl.classList.add("critical");
+}
+
+function setLimbVisual(svgEl, percent) {
+  svgEl.classList.remove("low", "critical");
+
+  if (percent <= 30) svgEl.classList.add("low");
+  if (percent <= 12) svgEl.classList.add("critical");
+}
+
+function renderLimb(barId, textId, svgId, current, max) {
+  const bar = document.getElementById(barId);
+  const txt = document.getElementById(textId);
+  const svg = document.getElementById(svgId);
+
+  if (!bar || !txt || !svg) return;
+
+  const percent = max > 0 ? (current / max) * 100 : 0;
+
+  setBar(bar, percent);
+  setLimbVisual(svg, percent);
+
+  txt.innerText = `${current}/${max}`;
+}
+
+function calcOverallStatus() {
+  const limbs = EFT_PROFILE.limbs;
+  const all = Object.values(limbs);
+
+  let totalCurrent = 0;
+  let totalMax = 0;
+
+  all.forEach(l => {
+    totalCurrent += l.current;
+    totalMax += l.max;
+  });
+
+  const percent = totalMax > 0 ? (totalCurrent / totalMax) * 100 : 0;
+
+  if (percent >= 85) return "健康 / HEALTHY";
+  if (percent >= 60) return "轻伤 / INJURED";
+  if (percent >= 35) return "重伤 / WOUNDED";
+  if (percent >= 15) return "濒危 / CRITICAL";
+  return "死亡边缘 / DYING";
+}
+
+function renderEFTPanel() {
+  renderLimb("hp-head", "hp-head-text", "limb-head", EFT_PROFILE.limbs.head.current, EFT_PROFILE.limbs.head.max);
+  renderLimb("hp-chest", "hp-chest-text", "limb-chest", EFT_PROFILE.limbs.chest.current, EFT_PROFILE.limbs.chest.max);
+  renderLimb("hp-stomach", "hp-stomach-text", "limb-stomach", EFT_PROFILE.limbs.stomach.current, EFT_PROFILE.limbs.stomach.max);
+  renderLimb("hp-arm-l", "hp-arm-l-text", "limb-arm-l", EFT_PROFILE.limbs.armL.current, EFT_PROFILE.limbs.armL.max);
+  renderLimb("hp-arm-r", "hp-arm-r-text", "limb-arm-r", EFT_PROFILE.limbs.armR.current, EFT_PROFILE.limbs.armR.max);
+  renderLimb("hp-leg-l", "hp-leg-l-text", "limb-leg-l", EFT_PROFILE.limbs.legL.current, EFT_PROFILE.limbs.legL.max);
+  renderLimb("hp-leg-r", "hp-leg-r-text", "limb-leg-r", EFT_PROFILE.limbs.legR.current, EFT_PROFILE.limbs.legR.max);
+
+  const hydration = clamp(EFT_PROFILE.hydration, 0, 100);
+  const energy = clamp(EFT_PROFILE.energy, 0, 100);
+
+  document.getElementById("eft-hydrationText").innerText = hydration + "%";
+  document.getElementById("eft-energyText").innerText = energy + "%";
+
+  setBar(document.getElementById("eft-hydrationBar"), hydration);
+  setBar(document.getElementById("eft-energyBar"), energy);
+
+  document.getElementById("eft-statusText").innerText = calcOverallStatus();
+
+  const warn = document.getElementById("eft-warningBox");
+  const msgs = [];
+
+  if (hydration <= 25) msgs.push("警告：严重脱水 / HYDRATION LOW");
+  if (energy <= 25) msgs.push("警告：饥饿状态 / ENERGY LOW");
+
+  if (EFT_PROFILE.limbs.head.current <= 10) msgs.push("危险：头部损伤 / HEAD CRITICAL");
+  if (EFT_PROFILE.limbs.chest.current <= 20) msgs.push("危险：胸腔损伤 / CHEST CRITICAL");
+  if (EFT_PROFILE.limbs.stomach.current <= 15) msgs.push("危险：胃部损伤 / STOMACH CRITICAL");
+
+  if (msgs.length === 0) {
+    warn.innerHTML = "防火墙扫描中...<br/>生理指标检测中...";
+    warn.classList.add("safe");
+  } else {
+    warn.innerHTML = msgs.join("<br/>");
+    warn.classList.remove("safe");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", renderEFTPanel);
+</script>
+
+<!-- ==========================
+     音乐播放器（你可扩展）
+     ========================== -->
+<script>
+(function() {
+  const playlist = [
+    { name: "反乌托邦", file: "反乌托邦.mp3", lrc: "反乌托邦.lrc" },
+    { name: "阿司匹林", file: "阿司匹林.mp3", lrc: "阿司匹林.lrc" },
+    { name: "焦作", file: "焦作.mp3", lrc: "焦作.lrc" }
+  ];
+
+  const musicDir = "./music/";
+
+  let currentIndex = 0;
+  const audio = new Audio();
+  audio.volume = 0.65;
+
+  const trackLabel = document.getElementById("trackName");
+  const playPauseBtn = document.getElementById("playPauseBtn");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const progressBar = document.getElementById("progressBarCustom");
+  const progressContainer = document.getElementById("progressContainer");
+  const currentTimeEl = document.getElementById("currentTime");
+  const durationTimeEl = document.getElementById("durationTime");
+  const lyricsBox = document.getElementById("lyricsBox");
+
+  let lyricsData = [];
+  let currentLyricIndex = -1;
+
+  function formatTime(sec) {
+    if (!sec || isNaN(sec)) return "00:00";
+    const m = Math.floor(sec / 60).toString().padStart(2, "0");
+    const s = Math.floor(sec % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  }
+
+  function parseLRC(lrcText) {
+    const lines = lrcText.split("\n");
+    const result = [];
+
+    lines.forEach(line => {
+      const match = line.match(/\[(\d+):(\d+)(?:\.(\d+))?\](.*)/);
+      if (!match) return;
+
+      const min = parseInt(match[1]);
+      const sec = parseInt(match[2]);
+      const ms = match[3] ? parseInt(match[3]) : 0;
+      const text = (match[4] || "").trim();
+
+      const time = min * 60 + sec + ms / 1000;
+
+      if (text) result.push({ time, text });
+    });
+
+    return result.sort((a, b) => a.time - b.time);
+  }
+
+  function renderLyrics() {
+    if (!lyricsBox) return;
+
+    lyricsBox.innerHTML = "";
+
+    if (!lyricsData.length) {
+      lyricsBox.innerHTML = `<div class="lyrics-line active">♪ 暂无歌词</div>`;
+      return;
+    }
+
+    lyricsData.forEach((l) => {
+      const div = document.createElement("div");
+      div.className = "lyrics-line";
+      div.innerText = l.text;
+      lyricsBox.appendChild(div);
+    });
+
+    currentLyricIndex = -1;
+  }
+
+  function highlightLyric(time) {
+    if (!lyricsData.length || !lyricsBox) return;
+
+    let idx = -1;
+    for (let i = 0; i < lyricsData.length; i++) {
+      if (time >= lyricsData[i].time) idx = i;
+      else break;
+    }
+
+    if (idx === currentLyricIndex) return;
+    currentLyricIndex = idx;
+
+    const lines = lyricsBox.querySelectorAll(".lyrics-line");
+    lines.forEach(el => el.classList.remove("active"));
+
+    if (idx >= 0 && lines[idx]) {
+      lines[idx].classList.add("active");
+
+      const target = lines[idx];
+      const boxRect = lyricsBox.getBoundingClientRect();
+      const lineRect = target.getBoundingClientRect();
+
+      const offset = (lineRect.top - boxRect.top) - lyricsBox.clientHeight / 2 + lineRect.height / 2;
+      lyricsBox.scrollTop += offset;
+    }
+  }
+
+  async function loadLyrics(lrcFile) {
+    lyricsData = [];
+    if (!lyricsBox) return;
+
+    lyricsBox.innerHTML = `<div class="lyrics-line active">♪ 歌词加载中...</div>`;
+
+    try {
+      const res = await fetch(musicDir + lrcFile);
+      if (!res.ok) throw new Error("LRC not found");
+
+      const text = await res.text();
+      lyricsData = parseLRC(text);
+      renderLyrics();
+    } catch (e) {
+      lyricsBox.innerHTML = `<div class="lyrics-line active">♪ 无歌词文件</div>`;
+    }
+  }
+
+  function loadTrack(idx, autoplay = true) {
+    const track = playlist[idx];
+    if (!track) return;
+
+    audio.src = musicDir + track.file;
+    trackLabel.innerText = "♪ " + track.name;
+
+    audio.load();
+
+    progressBar.style.width = "0%";
+    currentTimeEl.innerText = "00:00";
+    durationTimeEl.innerText = "00:00";
+
+    if (track.lrc) loadLyrics(track.lrc);
+
+    if (autoplay) {
+      audio.play().then(() => {
+        playPauseBtn.innerText = "❚❚";
+      }).catch(() => {
+        playPauseBtn.innerText = "▶";
+      });
+    } else {
+      playPauseBtn.innerText = "▶";
+    }
+  }
+
+  function playPause() {
+    if (audio.paused) {
+      audio.play().then(() => {
+        playPauseBtn.innerText = "❚❚";
+      }).catch(() => {});
+    } else {
+      audio.pause();
+      playPauseBtn.innerText = "▶";
+    }
+  }
+
+  playPauseBtn.addEventListener("click", playPause);
+
+  prevBtn.addEventListener("click", () => {
+    currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+    loadTrack(currentIndex, true);
+  });
+
+  nextBtn.addEventListener("click", () => {
+    currentIndex = (currentIndex + 1) % playlist.length;
+    loadTrack(currentIndex, true);
+  });
+
+  audio.addEventListener("timeupdate", () => {
+    if (!audio.duration) return;
+
+    const percent = (audio.currentTime / audio.duration) * 100;
+    progressBar.style.width = percent + "%";
+
+    currentTimeEl.innerText = formatTime(audio.currentTime);
+    durationTimeEl.innerText = formatTime(audio.duration);
+
+    highlightLyric(audio.currentTime);
+  });
+
+  progressContainer.addEventListener("click", (e) => {
+    if (!audio.duration) return;
+
+    const rect = progressContainer.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percent = clickX / rect.width;
+
+    audio.currentTime = percent * audio.duration;
+  });
+
+  audio.addEventListener("ended", () => {
+    currentIndex = (currentIndex + 1) % playlist.length;
+    loadTrack(currentIndex, true);
+  });
+
+  loadTrack(currentIndex, false);
+})();
+</script>
+
+<script>
+/* ==========================
+   HUD 基础功能（时间/年份）
+   ========================== */
+document.getElementById("year").innerText = new Date().getFullYear();
+
+setInterval(() => {
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  document.getElementById("hudTime").innerText = `TIME: ${hh}:${mm}`;
+}, 1000);
+
+/* ==========================
+   名言系统（只改 quotes 即可）
+   ========================== */
+const quotes = [
+  { text: "千里之行，始于足下。", author: "老子" },
+  { text: "天才是百分之一的灵感，加上百分之九十九的努力。", author: "托马斯·爱迪生" },
+  { text: "真正的勇气，是在绝望中仍选择前进。", author: "鲁迅" },
+  { text: "人生如逆旅，我亦是行人。", author: "苏轼" }
+];
+
+const idx = Math.floor(Math.random() * quotes.length);
+document.getElementById("randomQuote").innerText =
+  `"${quotes[idx].text}" — ${quotes[idx].author}`;
+
+/* ==========================
+   首页用户数据渲染（不要改）
+   ========================== */
+(function(){
+  const usernameEl = document.getElementById("username");
+  const taglineEl = document.getElementById("tagline");
+  const avatarEl = document.getElementById("avatarImg");
+  const rankEl = document.getElementById("userRank");
+
+  usernameEl.setAttribute("data-text", HOME_PROFILE.username);
+  usernameEl.innerText = HOME_PROFILE.username;
+
+  taglineEl.innerText = HOME_PROFILE.tagline || "";
+  avatarEl.src = HOME_PROFILE.avatar || "./avatar.png";
+
+  rankEl.innerText = HOME_PROFILE.rank || "ROOKIE";
+
+  const upper = String(rankEl.innerText).toUpperCase();
+
+  rankEl.style.borderColor = "rgba(252,238,9,0.55)";
+  rankEl.style.background = "rgba(252,238,9,0.08)";
+  rankEl.style.color = "rgba(252,238,9,0.95)";
+
+  if (upper.includes("ROOKIE") || upper.includes("新手")) {
+    rankEl.style.borderColor = "rgba(0,240,255,0.35)";
+    rankEl.style.background = "rgba(0,240,255,0.06)";
+    rankEl.style.color = "rgba(0,240,255,0.95)";
+  }
+
+  if (upper.includes("ELITE") || upper.includes("精英")) {
+    rankEl.style.borderColor = "rgba(255,43,214,0.35)";
+    rankEl.style.background = "rgba(255,43,214,0.06)";
+    rankEl.style.color = "rgba(255,43,214,0.95)";
+  }
+
+  if (upper.includes("LEGEND") || upper.includes("传奇")) {
+    rankEl.style.borderColor = "rgba(252,238,9,0.55)";
+    rankEl.style.background = "rgba(252,238,9,0.08)";
+    rankEl.style.color = "rgba(252,238,9,0.95)";
+  }
+
+  const recommendBox = document.getElementById("blogRecommend");
+
+  if (typeof profileData !== "undefined") {
+    const logs = profileData.logs || [];
+    if (logs.length > 0) {
+      const blogIdx = Math.floor(Math.random() * logs.length);
+      const blog = logs[blogIdx];
+
+      recommendBox.innerHTML = `
+        <b>${blog.title}</b>（${blog.date}）<br><br>
+        ${String(blog.content || "").slice(0,140)}...<br><br>
+        <a href="blog.html" class="btn">阅读更多</a>
+      `;
+    } else {
+      recommendBox.innerText = "暂无日志记录。";
+    }
+  } else {
+    recommendBox.innerText = "日志系统未加载（profileData.logs 不存在）。";
+  }
+})();
+</script>
+
+<script>
+/* =======================================================
+   ⭐ Boot Screen 控制（关键逻辑）
+   需求：公告必须在 Boot 结束后才弹出
+   ======================================================= */
+(function(){
+  const bootScreen = document.getElementById("bootScreen");
+  if (!bootScreen) return;
+
+  const bootKey = "CYBER_BOOT_DONE";
+
+  function forceCloseBoot() {
+    bootScreen.style.display = "none";
+  }
+
+  // ⭐ Boot 完成后调用（关键）
+  function afterBootComplete() {
+    forceCloseBoot();
+
+    // Boot 完成后再弹公告（新增）
+    setTimeout(() => {
+      showAnnouncementAfterBoot();
+    }, 250);
+  }
+
+  if (!sessionStorage.getItem(bootKey)) {
+    sessionStorage.setItem(bootKey, "true");
+
+    try {
+      if (typeof runBootScreen === "function") {
+        runBootScreen();
+
+        // ⭐ Boot 动画预计 4.2 秒
+        setTimeout(afterBootComplete, 4200);
+      } else {
+        afterBootComplete();
+      }
+    } catch (e) {
+      console.error("BOOT ERROR:", e);
+      afterBootComplete();
+    }
+  } else {
+    // 已经 Boot 过，不显示启动动画
+    forceCloseBoot();
+
+    // ⭐ 但仍然可以弹公告（如果没读过）
+    setTimeout(() => {
+      showAnnouncementAfterBoot();
+    }, 200);
+  }
+})();
+</script>
+
+<script>
+/* =======================================================
+   ⭐ 公告系统（最终修复版）
+   - Boot 后弹出
+   - 滚动到底解锁关闭按钮
+   - 不会卡 97%
+   ======================================================= */
+
+function showAnnouncementAfterBoot() {
+
+  // ==========================
+  // 【你只改这里】公告是否重复弹出
+  // sessionStorage：本次浏览器会话只弹一次
+  // localStorage：永久记住（以后都不弹）
+  // ==========================
+  const ANN_KEY = "CYBER_ANNOUNCEMENT_READ";
+
+  // 如果你希望每次刷新都弹，把这行删掉
+  if (sessionStorage.getItem(ANN_KEY) === "true") return;
+
+  const overlay = document.getElementById("announceOverlay");
+  const bodyBox = document.getElementById("announceBody");
+  const progressBar = document.getElementById("announceProgressBar");
+  const progressText = document.getElementById("announceProgressText");
+  const closeBtn = document.getElementById("announceCloseBtn");
+  const tip = document.getElementById("announceTip");
+
+  if (!overlay || !bodyBox || !progressBar || !progressText || !closeBtn || !tip) {
+    console.warn("公告系统缺少必要 DOM 元素，请检查 HTML id 是否正确");
+    return;
+  }
+
+  overlay.style.display = "flex";
+  document.body.style.overflow = "hidden";
+
+  closeBtn.classList.remove("enabled");
+  tip.innerText = "状态：未完成阅读";
+
+  function updateProgress() {
+    const scrollTop = bodyBox.scrollTop;
+    const maxScroll = bodyBox.scrollHeight - bodyBox.clientHeight;
+
+    const reachedBottom = scrollTop >= maxScroll - 3;
+
+    let percent = 0;
+    if (maxScroll > 0) {
+      percent = Math.floor((scrollTop / maxScroll) * 100);
+    }
+
+    if (reachedBottom) percent = 100;
+
+    percent = Math.max(0, Math.min(100, percent));
+
+    progressBar.style.width = percent + "%";
+    progressText.innerText = `阅读进度：${percent}%`;
+
+    if (percent >= 100) {
+      closeBtn.classList.add("enabled");
+      tip.innerText = "状态：已完成阅读 / VERIFIED";
+    } else {
+      closeBtn.classList.remove("enabled");
+      tip.innerText = "状态：未完成阅读";
+    }
+  }
+
+  bodyBox.addEventListener("scroll", updateProgress);
+
+  updateProgress();
+
+  closeBtn.onclick = function() {
+    if (!closeBtn.classList.contains("enabled")) return;
+
+    overlay.style.display = "none";
+    document.body.style.overflow = "";
+
+    sessionStorage.setItem(ANN_KEY, "true");
+  };
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && closeBtn.classList.contains("enabled")) {
+      closeBtn.click();
+    }
+  });
+}
+</script>
+
+<canvas id="cyberBg"></canvas>
+
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BLOG / LOG</title>
+
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./boot.css" />
+
+  <style>
+    /* BLOG 页面增强样式 */
+
+    .log-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .log-search {
+      flex: 1;
+      min-width: 220px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,240,255,0.25);
+      background: rgba(0,240,255,0.05);
+      color: rgba(255,255,255,0.9);
+      font-size: 9px;
+      outline: none;
+    }
+
+    .log-search::placeholder {
+      color: rgba(255,255,255,0.35);
+    }
+
+    .log-meta {
+      font-size: 9px;
+      color: rgba(255,255,255,0.6);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .log-card {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+      transition: 0.2s ease;
+    }
+
+    .log-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255,43,214,0.4);
+      box-shadow: 0 0 18px rgba(255,43,214,0.12);
+    }
+
+    .log-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(0,240,255,0.15), transparent);
+      transform: translateX(-120%);
+      transition: 0.5s;
+      pointer-events: none;
+    }
+
+    .log-card:hover::after {
+      transform: translateX(120%);
+    }
+
+    .log-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .log-title {
+      font-size: 11px;
+      color: var(--yellow);
+      text-shadow: 0 0 8px rgba(252,238,9,0.25);
+      line-height: 1.6;
+    }
+
+    .log-date {
+      font-size: 9px;
+      color: rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,240,255,0.25);
+      background: rgba(0,240,255,0.05);
+      padding: 8px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .log-content {
+      font-size: 9px;
+      color: rgba(255,255,255,0.82);
+      line-height: 2;
+      white-space: pre-line;
+      margin-top: 8px;
+    }
+
+    .log-id {
+      font-size: 8px;
+      margin-top: 12px;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .log-tags {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .log-tag {
+      font-size: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* 图片展示区 */
+    .log-images {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .log-images img {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(0,240,255,0.2);
+      background: rgba(0,0,0,0.25);
+      object-fit: cover;
+      transition: 0.2s ease;
+      cursor: pointer;
+    }
+
+    .log-images img:hover {
+      transform: scale(1.02);
+      border-color: rgba(255,43,214,0.35);
+      box-shadow: 0 0 18px rgba(255,43,214,0.12);
+    }
+
+    .empty-log {
+      font-size: 9px;
+      color: rgba(255,255,255,0.55);
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.03);
+      line-height: 2;
+    }
+
+    /* 点击图片放大预览 */
+    .img-preview {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      padding: 20px;
+    }
+
+    .img-preview img {
+      max-width: 95%;
+      max-height: 90%;
+      border-radius: 14px;
+      border: 1px solid rgba(0,240,255,0.35);
+      box-shadow: 0 0 40px rgba(0,240,255,0.12);
+    }
+
+    .img-preview .close {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      font-size: 20px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .img-preview .close:hover {
+      color: rgba(255,43,214,0.9);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="mouseGlow"></div>
+  <div id="flashTransition"></div>
+
+  <!-- 顶部栏 -->
+  <div id="topNavbar" class="top-navbar">
+    <div class="navbar-left">
+      <span id="sidebarToggleTop" class="nav-icon">☰</span>
+      <span class="nav-brand">CYBER PROFILE</span>
+    </div>
+
+    <div class="navbar-center">
+      <span class="nav-link" onclick="navigateTo('index.html')">主页</span>
+      <span class="nav-link" onclick="navigateTo('bio.html')">简介</span>
+      <span class="nav-link" onclick="navigateTo('projects.html')">项目</span>
+    </div>
+
+    <div class="navbar-right">
+      <span class="nav-link" onclick="navigateTo('blog.html')">日志</span>
+      <span class="nav-link" onclick="navigateTo('socials.html')">社交</span>
+    </div>
+  </div>
+
+  <!-- 侧边栏 -->
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title glitch">导航</span>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+    </div>
+
+    <div class="sidebar-menu">
+      <div class="sidebar-item" onclick="navigateTo('index.html')">主页</div>
+      <div class="sidebar-item" onclick="navigateTo('bio.html')">个人简介</div>
+      <div class="sidebar-item" onclick="navigateTo('history.html')">历史事迹</div>
+      <div class="sidebar-item" onclick="navigateTo('projects.html')">项目档案</div>
+      <div class="sidebar-item" onclick="navigateTo('achievements.html')">成就系统</div>
+      <div class="sidebar-item" onclick="navigateTo('blog.html')">日志系统</div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item" onclick="openAdminPanel()">管理员</div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="topbar">
+      <div>
+        <div class="title glitch" id="username" data-text="CYBER USER"></div>
+        <div class="subtitle" id="tagline"></div>
+        <div class="subtitle" id="randomQuote"></div>
+      </div>
+      <div class="status">MODULE: LOG</div>
+    </div>
+
+    <div class="panel">
+      <a class="btn" href="./index.html">⬅ 返回主页</a>
+      <h2>日志数据库 / BLOG SYSTEM</h2>
+
+      <div class="log-toolbar">
+        <input id="logSearch" class="log-search" placeholder="搜索日志...（标题/内容/日期/标签）" />
+        <div class="log-meta" id="logCount">总数: 0</div>
+      </div>
+
+      <div id="logList"></div>
+    </div>
+
+    <div class="footer">
+      © <span id="year"></span> CYBER PROFILE | LOG MODULE
+    </div>
+
+  </div>
+
+  <script src="./app.js"></script>
+  <script src="./background.js"></script>
+  <script src="./effects.js"></script>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    function navigateTo(page) {
+      window.location.href = page;
+    }
+
+    function openAdminPanel() {
+      alert("管理员面板入口（未来可实现登录/发布博客系统）");
+    }
+
+    document.getElementById("sidebarToggleTop").addEventListener("click", toggleSidebar);
+
+    // ==========================
+    // ⭐ 你可以在这里直接新增 Blog（不改 app.js）
+    // images: 支持图床链接数组
+    // tags: 支持标签数组
+    // ==========================
+    const localLogs = [
+      {
+        id: "LOG-LOCAL-0001",
+        title: "本地日志测试",
+        date: "2026-05-18",
+        content: "这篇日志是直接写在 blog.html 内的。\n你可以在这里自由添加更多日志，并且支持图片显示。",
+        tags: ["测试", "本地日志"],
+        images: [
+          "https://picsum.photos/600/400",
+          "https://picsum.photos/500/320"
+        ]
+      },
+       {
+         id: "LOG-LOCAL-0002",
+         title: "好累，不想跑步",
+         date: "2026-05-20",
+         content: "为什么要上学啊，真的好累呀！！！",
+         tags: ["杂谈", "日常"],
+         images: ["https://img.cdn1.vip/i/6a0c94c27b635_1779209410.webp"]
+       },
+    ];
+
+    // 图片预览弹窗
+    function openImagePreview(src) {
+      const overlay = document.createElement("div");
+      overlay.className = "img-preview";
+
+      overlay.innerHTML = `
+        <div class="close">✕</div>
+        <img src="${src}" />
+      `;
+
+      overlay.querySelector(".close").addEventListener("click", () => overlay.remove());
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) overlay.remove();
+      });
+
+      document.body.appendChild(overlay);
+    }
+
+    // BLOG 渲染系统（合并 app.js + localLogs）
+    document.addEventListener("DOMContentLoaded", () => {
+      const list = document.getElementById("logList");
+      const searchInput = document.getElementById("logSearch");
+      const countEl = document.getElementById("logCount");
+
+      if (!list || !searchInput || !countEl) return;
+
+      const baseLogs = (window.profileData && profileData.logs) ? profileData.logs : [];
+
+      // 合并日志
+      const logs = [...baseLogs, ...localLogs].reverse();
+
+      function render(filteredLogs) {
+        list.innerHTML = "";
+        countEl.innerText = "总数: " + filteredLogs.length;
+
+        if (filteredLogs.length === 0) {
+          list.innerHTML = `
+            <div class="empty-log">
+              未找到任何日志。<br/>
+              请修改关键词，或在 localLogs 中添加日志内容。
+            </div>
+          `;
+          return;
+        }
+
+        filteredLogs.forEach((log) => {
+          const div = document.createElement("div");
+          div.className = "log-card";
+
+          const tagsHTML = Array.isArray(log.tags) && log.tags.length > 0
+            ? `<div class="log-tags">${log.tags.map(t => `<span class="log-tag">${t}</span>`).join("")}</div>`
+            : "";
+
+          const imagesHTML = Array.isArray(log.images) && log.images.length > 0
+            ? `
+              <div class="log-images">
+                ${log.images.map(img => `<img src="${img}" alt="log image" />`).join("")}
+              </div>
+            `
+            : "";
+
+          div.innerHTML = `
+            <div class="log-head">
+              <div class="log-title">${log.title || "未命名日志"}</div>
+              <div class="log-date">${log.date || "未知日期"}</div>
+            </div>
+
+            <div class="log-content">${log.content || ""}</div>
+
+            ${tagsHTML}
+            ${imagesHTML}
+
+            <div class="log-id">${log.id || "LOG-UNKNOWN"}</div>
+          `;
+
+          // 绑定图片点击放大
+          div.querySelectorAll(".log-images img").forEach(imgEl => {
+            imgEl.addEventListener("click", () => openImagePreview(imgEl.src));
+          });
+
+          list.appendChild(div);
+        });
+      }
+
+      render(logs);
+
+      searchInput.addEventListener("input", () => {
+        const q = searchInput.value.trim().toLowerCase();
+
+        if (!q) {
+          render(logs);
+          return;
+        }
+
+        const filtered = logs.filter(l => {
+          const tags = Array.isArray(l.tags) ? l.tags.join(" ") : "";
+          return (
+            (l.title || "").toLowerCase().includes(q) ||
+            (l.content || "").toLowerCase().includes(q) ||
+            (l.date || "").toLowerCase().includes(q) ||
+            (l.id || "").toLowerCase().includes(q) ||
+            tags.toLowerCase().includes(q)
+          );
+        });
+
+        render(filtered);
+      });
+    });
+  </script>
+
+</body>
+</html>

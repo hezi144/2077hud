@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HISTORY LOG</title>
+
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./boot.css" />
+
+  <style>
+    /* HISTORY 页面专属美化 */
+
+    .his-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .his-search {
+      flex: 1;
+      min-width: 220px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,240,255,0.25);
+      background: rgba(0,240,255,0.05);
+      color: rgba(255,255,255,0.9);
+      font-size: 9px;
+      outline: none;
+    }
+
+    .his-search::placeholder {
+      color: rgba(255,255,255,0.35);
+    }
+
+    .his-meta {
+      font-size: 9px;
+      color: rgba(255,255,255,0.6);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 18px;
+      margin-top: 12px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,240,255,0.6),
+        rgba(255,43,214,0.4),
+        rgba(252,238,9,0.3)
+      );
+      opacity: 0.7;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      border-radius: 14px;
+      padding: 14px 14px 14px 16px;
+      overflow: hidden;
+      transition: 0.2s ease;
+    }
+
+    .timeline-item:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0,240,255,0.35);
+      box-shadow: 0 0 18px rgba(0,240,255,0.12);
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -18px;
+      top: 18px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,240,255,0.7);
+      background: rgba(0,240,255,0.25);
+      box-shadow: 0 0 12px rgba(0,240,255,0.2);
+    }
+
+    .timeline-item::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(255,43,214,0.14), transparent);
+      transform: translateX(-120%);
+      transition: 0.5s;
+      pointer-events: none;
+    }
+
+    .timeline-item:hover::after {
+      transform: translateX(120%);
+    }
+
+    .timeline-year {
+      font-size: 9px;
+      color: rgba(255,255,255,0.65);
+      border: 1px solid rgba(0,240,255,0.25);
+      background: rgba(0,240,255,0.05);
+      padding: 6px 10px;
+      border-radius: 999px;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .timeline-desc {
+      font-size: 9px;
+      color: rgba(255,255,255,0.82);
+      line-height: 2;
+      white-space: pre-line;
+    }
+
+    .empty-history {
+      font-size: 9px;
+      color: rgba(255,255,255,0.55);
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.03);
+      line-height: 2;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="mouseGlow"></div>
+  <div id="flashTransition"></div>
+
+  <!-- 顶部栏 -->
+  <div id="topNavbar" class="top-navbar">
+    <div class="navbar-left">
+      <span id="sidebarToggleTop" class="nav-icon">☰</span>
+      <span class="nav-brand">CYBER PROFILE</span>
+    </div>
+
+    <div class="navbar-center">
+      <span class="nav-link" onclick="navigateTo('index.html')">主页</span>
+      <span class="nav-link" onclick="navigateTo('bio.html')">简介</span>
+      <span class="nav-link" onclick="navigateTo('projects.html')">项目</span>
+    </div>
+
+    <div class="navbar-right">
+      <span class="nav-link" onclick="navigateTo('blog.html')">日志</span>
+      <span class="nav-link" onclick="navigateTo('socials.html')">社交</span>
+    </div>
+  </div>
+
+  <!-- 侧边栏 -->
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title glitch">导航</span>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+    </div>
+
+    <div class="sidebar-menu">
+      <div class="sidebar-item" onclick="navigateTo('index.html')">主页</div>
+      <div class="sidebar-item" onclick="navigateTo('bio.html')">个人简介</div>
+      <div class="sidebar-item" onclick="navigateTo('history.html')">历史事迹</div>
+      <div class="sidebar-item" onclick="navigateTo('projects.html')">项目档案</div>
+      <div class="sidebar-item" onclick="navigateTo('achievements.html')">成就系统</div>
+      <div class="sidebar-item" onclick="navigateTo('blog.html')">日志系统</div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item" onclick="openAdminPanel()">管理员</div>
+    </div>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="container">
+
+    <div class="topbar">
+      <div>
+        <div class="title glitch" id="username" data-text="CYBER USER"></div>
+        <div class="subtitle" id="tagline"></div>
+        <div class="subtitle" id="randomQuote"></div>
+      </div>
+      <div class="status">MODULE: HISTORY</div>
+    </div>
+
+    <div class="panel">
+      <a class="btn" href="./index.html">⬅ 返回主页</a>
+      <h2>历史事迹 / 时间轴记录</h2>
+
+      <div class="his-toolbar">
+        <input id="hisSearch" class="his-search" placeholder="搜索历史记录...（年份/内容）" />
+        <div class="his-meta" id="hisCount">总数: 0</div>
+      </div>
+
+      <div id="timeline" class="timeline"></div>
+    </div>
+
+    <div class="footer">
+      © <span id="year"></span> CYBER PROFILE | HISTORY MODULE
+    </div>
+
+  </div>
+
+  <!-- JS -->
+  <script src="./app.js"></script>
+  <script src="./background.js"></script>
+  <script src="./effects.js"></script>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    function navigateTo(page) {
+      window.location.href = page;
+    }
+
+    function openAdminPanel() {
+      alert("管理员面板入口（未来可做登录/发布系统）");
+    }
+
+    document.getElementById("sidebarToggleTop").addEventListener("click", toggleSidebar);
+
+    // ==========================
+    // ⭐ 你可以在这里直接新增历史事迹（不改 app.js）
+    // ==========================
+    const localHistory = [
+      {
+        year: "2026",
+        desc: "本地历史记录测试：这条记录是直接写在 history.html 内的，不需要修改 app.js。"
+      },
+
+      // 你以后继续往下加：
+       {
+         year: "2026",
+         desc: "0.0.1发布力"
+       }
+    ];
+
+    // ==========================
+    // ⭐ HISTORY 渲染系统（合并 app.js + localHistory）
+    // ==========================
+    document.addEventListener("DOMContentLoaded", () => {
+      const timeline = document.getElementById("timeline");
+      const searchInput = document.getElementById("hisSearch");
+      const countEl = document.getElementById("hisCount");
+
+      if (!timeline || !searchInput || !countEl) return;
+
+      const baseEvents = (window.profileData && profileData.events) ? profileData.events : [];
+      const events = [...baseEvents, ...localHistory].reverse();
+
+      function render(list) {
+        timeline.innerHTML = "";
+        countEl.innerText = "总数: " + list.length;
+
+        if (list.length === 0) {
+          timeline.innerHTML = `
+            <div class="empty-history">
+              未找到任何历史记录。<br/>
+              请修改搜索关键词，或在 localHistory 中添加内容。
+            </div>
+          `;
+          return;
+        }
+
+        list.forEach(e => {
+          const item = document.createElement("div");
+          item.className = "timeline-item";
+
+          item.innerHTML = `
+            <div class="timeline-year">${e.year || "????"}</div>
+            <div class="timeline-desc">${e.desc || ""}</div>
+          `;
+
+          timeline.appendChild(item);
+        });
+      }
+
+      render(events);
+
+      searchInput.addEventListener("input", () => {
+        const q = searchInput.value.trim().toLowerCase();
+
+        if (!q) {
+          render(events);
+          return;
+        }
+
+        const filtered = events.filter(e =>
+          (e.year || "").toLowerCase().includes(q) ||
+          (e.desc || "").toLowerCase().includes(q)
+        );
+
+        render(filtered);
+      });
+    });
+  </script>
+
+</body>
+</html>

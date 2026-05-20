@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>成就系统</title>
+
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./boot.css" />
+
+  <style>
+    /* Achievements 页面专属 HUD 美化 */
+
+    .ach-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .ach-search {
+      flex: 1;
+      min-width: 220px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,240,255,0.25);
+      background: rgba(0,240,255,0.05);
+      color: rgba(255,255,255,0.9);
+      font-size: 9px;
+      outline: none;
+    }
+
+    .ach-search::placeholder {
+      color: rgba(255,255,255,0.35);
+    }
+
+    .ach-filter {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.85);
+      font-size: 9px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .ach-meta {
+      font-size: 9px;
+      color: rgba(255,255,255,0.6);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .ach-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .ach-card {
+      --accent: rgba(255,255,255,0.65);
+      --glow: rgba(255,255,255,0.10);
+
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      border-radius: 14px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: 0.2s ease;
+      cursor: pointer;
+    }
+
+    .ach-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 0 18px var(--glow);
+    }
+
+    .ach-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(255, 43, 214, 0.14), transparent);
+      transform: translateX(-120%);
+      transition: 0.5s;
+      pointer-events: none;
+    }
+
+    .ach-card:hover::after {
+      transform: translateX(120%);
+    }
+
+    .ach-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .ach-title {
+      font-size: 10px;
+      color: var(--yellow);
+      line-height: 1.7;
+      text-shadow: 0 0 8px rgba(252,238,9,0.2);
+    }
+
+    .ach-level {
+      font-size: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: rgba(255,255,255,0.03);
+      white-space: nowrap;
+      text-transform: uppercase;
+      color: var(--accent);
+      box-shadow: 0 0 10px var(--glow);
+    }
+
+    .ach-desc {
+      font-size: 9px;
+      color: rgba(255,255,255,0.78);
+      line-height: 2;
+      white-space: pre-line;
+    }
+
+    .ach-footer {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 8px;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .ach-code {
+      opacity: 0.7;
+    }
+
+    .ach-year {
+      border: 1px solid rgba(0,240,255,0.25);
+      background: rgba(0,240,255,0.05);
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .empty-ach {
+      font-size: 9px;
+      color: rgba(255,255,255,0.55);
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.03);
+      line-height: 2;
+      margin-top: 12px;
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="mouseGlow"></div>
+  <div id="flashTransition"></div>
+
+  <!-- 顶部栏 -->
+  <div id="topNavbar" class="top-navbar">
+    <div class="navbar-left">
+      <span id="sidebarToggleTop" class="nav-icon">☰</span>
+      <span class="nav-brand">CYBER PROFILE</span>
+    </div>
+
+    <div class="navbar-center">
+      <span class="nav-link" onclick="navigateTo('index.html')">主页</span>
+      <span class="nav-link" onclick="navigateTo('bio.html')">简介</span>
+      <span class="nav-link" onclick="navigateTo('projects.html')">项目</span>
+    </div>
+
+    <div class="navbar-right">
+      <span class="nav-link" onclick="navigateTo('blog.html')">日志</span>
+      <span class="nav-link" onclick="navigateTo('socials.html')">社交</span>
+    </div>
+  </div>
+
+  <!-- 侧边栏 -->
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title glitch">导航</span>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+    </div>
+
+    <div class="sidebar-menu">
+      <div class="sidebar-item" onclick="navigateTo('index.html')">主页</div>
+      <div class="sidebar-item" onclick="navigateTo('bio.html')">个人简介</div>
+      <div class="sidebar-item" onclick="navigateTo('history.html')">历史事迹</div>
+      <div class="sidebar-item" onclick="navigateTo('projects.html')">项目档案</div>
+      <div class="sidebar-item" onclick="navigateTo('achievements.html')">成就系统</div>
+      <div class="sidebar-item" onclick="navigateTo('blog.html')">日志系统</div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item" onclick="openAdminPanel()">管理员</div>
+    </div>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="container">
+
+    <div class="topbar">
+      <div>
+        <div class="title glitch" id="username" data-text="CYBER USER"></div>
+        <div class="subtitle" id="tagline"></div>
+        <div class="subtitle" id="randomQuote"></div>
+      </div>
+      <div class="status">MODULE: ACHIEVEMENTS</div>
+    </div>
+
+    <div class="panel">
+      <a class="btn" href="./index.html">⬅ 返回主页</a>
+      <h2>成就数据库</h2>
+
+      <div class="ach-toolbar">
+        <input id="achSearch" class="ach-search" placeholder="搜索成就...（标题/描述/编号/年份）" />
+        <select id="achFilter" class="ach-filter"></select>
+        <div class="ach-meta" id="achCount">总数: 0</div>
+      </div>
+
+      <div id="achievementGrid" class="ach-grid"></div>
+    </div>
+
+    <div class="footer">
+      © <span id="year"></span> CYBER PROFILE | ACHIEVEMENT MODULE
+    </div>
+
+  </div>
+
+  <!-- JS -->
+  <script src="./app.js"></script>
+  <script src="./background.js"></script>
+  <script src="./effects.js"></script>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    function navigateTo(page) {
+      window.location.href = page;
+    }
+
+    function openAdminPanel() {
+      alert("管理员面板入口（你未来可以在这里做登录/发布成就/发布博客系统）");
+    }
+
+    document.getElementById("sidebarToggleTop").addEventListener("click", toggleSidebar);
+
+   // ==========================
+// ⭐ 你可以在这里直接新增成就（不改 app.js）
+// ==========================
+const localAchievements = [
+  {
+    code: "ACH-LOCAL-0001",
+    title: "本地成就测试",
+    desc: "这个成就是在 achievements.html 里直接添加的，不需要修改 app.js。",
+    level: "EPIC",
+    year: "2026"
+  },
+
+  {
+    code: "ACH-LOCAL-0002",
+    title: "黑梦",
+    desc: "bata0.01发布，太好了AWA",
+    level: "MYTHIC",
+    year: "2026"
+  },
+ {
+    code: "ACH-LOCAL-0003",
+    title: "bata0.1.0",
+    desc: "第一个公测版本发布",
+    level: "LEGENDARY",
+    year: "2026"
+  }
+];
+
+    // ==========================
+    // ⭐ 成就等级中文映射（可扩展）
+    // ==========================
+    const levelCN = {
+      "COMMON": "普通",
+      "RARE": "稀有",
+      "EPIC": "史诗",
+      "LEGENDARY": "传说",
+      "MYTHIC": "神话"
+    };
+
+    // ==========================
+    // ⭐ 等级主题颜色自动适配（未知等级也能显示）
+    // ==========================
+    function applyTheme(card, level) {
+      const L = (level || "COMMON").toUpperCase();
+
+      const themeMap = {
+        "COMMON": { accent: "rgba(255,255,255,0.65)", glow: "rgba(255,255,255,0.10)" },
+        "RARE": { accent: "rgba(0,240,255,0.95)", glow: "rgba(0,240,255,0.15)" },
+        "EPIC": { accent: "rgba(255,43,214,0.95)", glow: "rgba(255,43,214,0.15)" },
+        "LEGENDARY": { accent: "rgba(252,238,9,0.95)", glow: "rgba(252,238,9,0.18)" },
+        "MYTHIC": { accent: "rgba(255,80,50,0.95)", glow: "rgba(255,80,50,0.18)" }
+      };
+
+      // 未知等级：随机给个科技色
+      const fallback = {
+        accent: "rgba(0,240,255,0.75)",
+        glow: "rgba(0,240,255,0.12)"
+      };
+
+      const t = themeMap[L] || fallback;
+
+      card.style.setProperty("--accent", t.accent);
+      card.style.setProperty("--glow", t.glow);
+    }
+
+    // ==========================
+    // ⭐ 自动生成筛选选项（汉化）
+    // ==========================
+    function buildFilterOptions(allAchievements) {
+      const filterSelect = document.getElementById("achFilter");
+      if (!filterSelect) return;
+
+      const levels = new Set();
+
+      allAchievements.forEach(a => {
+        const lvl = (a.level || "COMMON").toUpperCase().trim();
+        levels.add(lvl);
+      });
+
+      // 常见等级排序优先，其它自动排后面
+      const order = ["COMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"];
+      const sorted = Array.from(levels).sort((a, b) => {
+        const ia = order.indexOf(a);
+        const ib = order.indexOf(b);
+
+        if (ia === -1 && ib === -1) return a.localeCompare(b);
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      });
+
+      filterSelect.innerHTML = "";
+      filterSelect.innerHTML += `<option value="ALL">筛选：全部</option>`;
+
+      sorted.forEach(level => {
+        const cn = levelCN[level] || level;
+        filterSelect.innerHTML += `<option value="${level}">${cn}</option>`;
+      });
+    }
+
+    // ==========================
+    // ⭐ 渲染成就
+    // ==========================
+    document.addEventListener("DOMContentLoaded", () => {
+      const grid = document.getElementById("achievementGrid");
+      const searchInput = document.getElementById("achSearch");
+      const filterSelect = document.getElementById("achFilter");
+      const countEl = document.getElementById("achCount");
+
+      if (!grid || !searchInput || !filterSelect || !countEl) return;
+
+      // 从 app.js 读取 achievements（不改 app.js）
+      const baseAchievements = (window.profileData && profileData.achievements) ? profileData.achievements : [];
+
+      // 合并 app.js 的成就 + achievements.html 本地成就
+      const achievements = [...baseAchievements, ...localAchievements].reverse();
+
+      buildFilterOptions(achievements);
+
+      function render(list) {
+        grid.innerHTML = "";
+        countEl.innerText = "总数: " + list.length;
+
+        if (list.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-ach">
+              未找到匹配的成就。<br/>
+              请尝试修改筛选条件或搜索关键词。
+            </div>
+          `;
+          return;
+        }
+
+        list.forEach((a) => {
+          const div = document.createElement("div");
+          div.className = "ach-card";
+
+          const levelText = (a.level || "COMMON").toUpperCase();
+          const levelTextCN = levelCN[levelText] || levelText;
+
+          applyTheme(div, levelText);
+
+          div.innerHTML = `
+            <div class="ach-head">
+              <div class="ach-title">${a.title}</div>
+              <div class="ach-level">${levelTextCN}</div>
+            </div>
+
+            <div class="ach-desc">${a.desc}</div>
+
+            <div class="ach-footer">
+              <div class="ach-code">${a.code || "ACH-UNKNOWN"}</div>
+              <div class="ach-year">${a.year || "????"}</div>
+            </div>
+          `;
+
+          grid.appendChild(div);
+        });
+      }
+
+      function applyFilter() {
+        const q = searchInput.value.trim().toLowerCase();
+        const filter = filterSelect.value.toUpperCase();
+
+        let filtered = achievements;
+
+        if (filter !== "ALL") {
+          filtered = filtered.filter(a => (a.level || "COMMON").toUpperCase() === filter);
+        }
+
+        if (q) {
+          filtered = filtered.filter(a =>
+            (a.title || "").toLowerCase().includes(q) ||
+            (a.desc || "").toLowerCase().includes(q) ||
+            (a.code || "").toLowerCase().includes(q) ||
+            (a.year || "").toLowerCase().includes(q) ||
+            (a.level || "").toLowerCase().includes(q)
+          );
+        }
+
+        render(filtered);
+      }
+
+      render(achievements);
+
+      searchInput.addEventListener("input", applyFilter);
+      filterSelect.addEventListener("change", applyFilter);
+    });
+  </script>
+
+</body>
+</html>

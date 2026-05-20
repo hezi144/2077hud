@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PROJECT ARCHIVE</title>
+
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./boot.css" />
+
+  <style>
+    /* PROJECTS 页面专属增强样式 */
+
+    .proj-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .proj-search {
+      flex: 1;
+      min-width: 220px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,240,255,0.25);
+      background: rgba(0,240,255,0.05);
+      color: rgba(255,255,255,0.9);
+      font-size: 9px;
+      outline: none;
+      letter-spacing: 1px;
+    }
+
+    .proj-search::placeholder {
+      color: rgba(255,255,255,0.35);
+    }
+
+    .proj-meta {
+      font-size: 9px;
+      color: rgba(255,255,255,0.6);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      letter-spacing: 1px;
+    }
+
+    /* 项目卡片 */
+    .project-card {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      transition: 0.2s ease;
+      position: relative;
+    }
+
+    .project-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(0,240,255,0.35);
+      box-shadow: 0 0 18px rgba(0,240,255,0.12);
+    }
+
+    .project-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(255,43,214,0.14), transparent);
+      transform: translateX(-120%);
+      transition: 0.6s;
+      pointer-events: none;
+    }
+
+    .project-card:hover::after {
+      transform: translateX(120%);
+    }
+
+    /* 顶部封面 */
+    .project-cover {
+      width: 100%;
+      height: 140px;
+      background: rgba(0,0,0,0.25);
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .project-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.85;
+      transition: 0.25s ease;
+    }
+
+    .project-card:hover .project-cover img {
+      transform: scale(1.03);
+      opacity: 1;
+    }
+
+    .project-cover::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(0,240,255,0.12), transparent 70%);
+      pointer-events: none;
+    }
+
+    /* 内容 */
+    .project-body {
+      padding: 16px;
+    }
+
+    .project-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .project-title {
+      font-size: 11px;
+      color: var(--yellow);
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px rgba(252,238,9,0.18);
+      line-height: 1.6;
+    }
+
+    .project-year {
+      font-size: 9px;
+      color: rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,240,255,0.25);
+      background: rgba(0,240,255,0.05);
+      padding: 8px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+      letter-spacing: 1px;
+    }
+
+    .project-desc {
+      font-size: 9px;
+      color: rgba(255,255,255,0.82);
+      line-height: 2;
+      white-space: pre-line;
+      margin-bottom: 12px;
+    }
+
+    .project-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+
+    .project-tag {
+      font-size: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.5px;
+    }
+
+    .project-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .proj-btn {
+      display: inline-block;
+      font-size: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,240,255,0.25);
+      background: rgba(0,240,255,0.05);
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 1px;
+      text-decoration: none;
+      transition: 0.2s ease;
+    }
+
+    .proj-btn:hover {
+      border-color: rgba(255,43,214,0.35);
+      box-shadow: 0 0 14px rgba(255,43,214,0.12);
+      transform: translateY(-2px);
+    }
+
+    .project-id {
+      font-size: 8px;
+      margin-top: 12px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 1px;
+    }
+
+    .empty-project {
+      font-size: 9px;
+      color: rgba(255,255,255,0.55);
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.03);
+      line-height: 2;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="mouseGlow"></div>
+  <div id="flashTransition"></div>
+
+  <!-- 顶部栏 -->
+  <div id="topNavbar" class="top-navbar">
+    <div class="navbar-left">
+      <span id="sidebarToggleTop" class="nav-icon">☰</span>
+      <span class="nav-brand">CYBER PROFILE</span>
+    </div>
+
+    <div class="navbar-center">
+      <span class="nav-link" onclick="navigateTo('index.html')">主页</span>
+      <span class="nav-link" onclick="navigateTo('bio.html')">简介</span>
+      <span class="nav-link" onclick="navigateTo('projects.html')">项目</span>
+    </div>
+
+    <div class="navbar-right">
+      <span class="nav-link" onclick="navigateTo('blog.html')">日志</span>
+      <span class="nav-link" onclick="navigateTo('socials.html')">社交</span>
+    </div>
+  </div>
+
+  <!-- 侧边栏 -->
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title glitch">导航</span>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+    </div>
+
+    <div class="sidebar-menu">
+      <div class="sidebar-item" onclick="navigateTo('index.html')">主页</div>
+      <div class="sidebar-item" onclick="navigateTo('bio.html')">个人简介</div>
+      <div class="sidebar-item" onclick="navigateTo('history.html')">历史事迹</div>
+      <div class="sidebar-item" onclick="navigateTo('projects.html')">项目档案</div>
+      <div class="sidebar-item" onclick="navigateTo('achievements.html')">成就系统</div>
+      <div class="sidebar-item" onclick="navigateTo('blog.html')">日志系统</div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item" onclick="openAdminPanel()">管理员</div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="topbar">
+      <div>
+        <div class="title glitch" id="username" data-text="CYBER USER"></div>
+        <div class="subtitle" id="tagline"></div>
+        <div class="subtitle" id="randomQuote"></div>
+      </div>
+      <div class="status">MODULE: PROJECTS</div>
+    </div>
+
+    <div class="panel">
+      <a class="btn" href="./index.html">⬅ 返回主页</a>
+      <h2>项目档案馆 / PROJECT ARCHIVE</h2>
+
+      <div class="proj-toolbar">
+        <input id="projSearch" class="proj-search" placeholder="搜索项目...（标题/描述/技术栈/年份）" />
+        <div class="proj-meta" id="projCount">总数: 0</div>
+      </div>
+
+      <div id="projectList"></div>
+    </div>
+
+    <div class="footer">
+      © <span id="year"></span> CYBER PROFILE | PROJECT MODULE
+    </div>
+
+  </div>
+
+  <script src="./app.js"></script>
+  <script src="./effects.js"></script>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    function navigateTo(page) {
+      window.location.href = page;
+    }
+
+    function openAdminPanel() {
+      alert("管理员面板入口（未来可实现登录/发布系统）");
+    }
+
+    document.getElementById("sidebarToggleTop").addEventListener("click", toggleSidebar);
+
+    // ==========================
+    // ⭐ 你可以在这里直接新增项目（不改 app.js）
+    // cover: 支持图床封面
+    // tags: 技术栈标签
+    // links: 支持 demo/github/doc
+    // ==========================
+    const localProjects = [
+      {
+        id: "PRJ-LOCAL-0001",
+        title: "本地项目测试",
+        year: "2026",
+        desc: "这个项目是直接写在 projects.html 内的。\n不需要修改 app.js。",
+        tags: ["HTML", "CSS", "JavaScript"],
+        cover: "https://picsum.photos/900/500",
+        links: {
+          demo: "https://example.com",
+          github: "https://github.com",
+          doc: ""
+        }
+      }
+    ];
+
+    // ==========================
+    // ⭐ 渲染系统（合并 app.js projects + localProjects）
+    // ==========================
+    document.addEventListener("DOMContentLoaded", () => {
+      const list = document.getElementById("projectList");
+      const searchInput = document.getElementById("projSearch");
+      const countEl = document.getElementById("projCount");
+
+      if (!list || !searchInput || !countEl) return;
+
+      // 渲染顶部栏（如果 app.js 提供）
+      try {
+        if (typeof renderTopbar === "function") renderTopbar();
+        if (typeof setupMouseGlow === "function") setupMouseGlow();
+      } catch (e) {}
+
+      if (typeof profileData !== "undefined") {
+        const u = document.getElementById("username");
+        if (u && profileData.username) u.setAttribute("data-text", profileData.username);
+      }
+
+      const baseProjects = (window.profileData && profileData.projects) ? profileData.projects : [];
+      const projects = [...baseProjects, ...localProjects].reverse();
+
+      function buildLinksHTML(links) {
+        if (!links) return "";
+
+        const btns = [];
+
+        if (links.demo) btns.push(`<a class="proj-btn" href="${links.demo}" target="_blank">DEMO</a>`);
+        if (links.github) btns.push(`<a class="proj-btn" href="${links.github}" target="_blank">GITHUB</a>`);
+        if (links.doc) btns.push(`<a class="proj-btn" href="${links.doc}" target="_blank">DOC</a>`);
+
+        if (btns.length === 0) return "";
+        return `<div class="project-links">${btns.join("")}</div>`;
+      }
+
+      function render(filtered) {
+        list.innerHTML = "";
+        countEl.innerText = "总数: " + filtered.length;
+
+        if (filtered.length === 0) {
+          list.innerHTML = `
+            <div class="empty-project">
+              未找到任何项目。<br/>
+              请修改关键词，或在 localProjects 中添加项目内容。
+            </div>
+          `;
+          return;
+        }
+
+        filtered.forEach(p => {
+          const tagsHTML = Array.isArray(p.tags) && p.tags.length > 0
+            ? `<div class="project-tags">${p.tags.map(t => `<span class="project-tag">${t}</span>`).join("")}</div>`
+            : "";
+
+          const coverHTML = p.cover
+            ? `
+              <div class="project-cover">
+                <img src="${p.cover}" alt="cover" onerror="this.style.display='none'"/>
+              </div>
+            `
+            : "";
+
+          const linksHTML = buildLinksHTML(p.links);
+
+          const card = document.createElement("div");
+          card.className = "project-card";
+
+          card.innerHTML = `
+            ${coverHTML}
+
+            <div class="project-body">
+              <div class="project-head">
+                <div class="project-title">${p.title || "未命名项目"}</div>
+                <div class="project-year">${p.year || "????"}</div>
+              </div>
+
+              <div class="project-desc">${p.desc || ""}</div>
+
+              ${tagsHTML}
+              ${linksHTML}
+
+              <div class="project-id">${p.id || "PRJ-UNKNOWN"}</div>
+            </div>
+          `;
+
+          list.appendChild(card);
+        });
+      }
+
+      render(projects);
+
+      searchInput.addEventListener("input", () => {
+        const q = searchInput.value.trim().toLowerCase();
+
+        if (!q) {
+          render(projects);
+          return;
+        }
+
+        const filtered = projects.filter(p => {
+          const tags = Array.isArray(p.tags) ? p.tags.join(" ") : "";
+          const links = p.links ? Object.values(p.links).join(" ") : "";
+
+          return (
+            (p.title || "").toLowerCase().includes(q) ||
+            (p.desc || "").toLowerCase().includes(q) ||
+            (p.year || "").toLowerCase().includes(q) ||
+            (p.id || "").toLowerCase().includes(q) ||
+            tags.toLowerCase().includes(q) ||
+            links.toLowerCase().includes(q)
+          );
+        });
+
+        render(filtered);
+      });
+    });
+  </script>
+
+<script src="./background.js"></script>
+
+</body>
+</html>

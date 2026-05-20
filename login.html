@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ACCESS TERMINAL</title>
+
+  <link rel="stylesheet" href="./style.css"/>
+  <link rel="stylesheet" href="./boot.css"/>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+    }
+
+    /* 黑红背景 */
+    .login-bg {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(255,0,60,0.22), transparent 55%),
+        radial-gradient(circle at 80% 75%, rgba(255,0,0,0.18), transparent 60%),
+        radial-gradient(circle at 40% 90%, rgba(255,80,0,0.12), transparent 60%),
+        linear-gradient(180deg, rgba(0,0,0,0.92), rgba(0,0,0,0.98));
+      z-index: 0;
+    }
+
+    /* 扫描线 */
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,0,0,0.025),
+        rgba(255,0,0,0.025) 1px,
+        transparent 1px,
+        transparent 6px
+      );
+      opacity: 0.75;
+      pointer-events: none;
+      z-index: 1;
+      animation: scan 4s linear infinite;
+    }
+
+    @keyframes scan {
+      from { background-position: 0 -2000px; }
+      to { background-position: 0 2000px; }
+    }
+
+    /* 噪点 */
+    .noise {
+      position: fixed;
+      inset: 0;
+      background-image: url("https://i.imgur.com/8bQ8J8W.png");
+      opacity: 0.06;
+      mix-blend-mode: overlay;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* 红色警报闪光层 */
+    .alarm-flash {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 0, 60, 0.15);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 20;
+      transition: opacity 0.2s ease;
+    }
+
+    .alarm-flash.active {
+      opacity: 1;
+      animation: alarmPulse 0.8s infinite;
+    }
+
+    @keyframes alarmPulse {
+      0% { opacity: 0.05; }
+      50% { opacity: 0.35; }
+      100% { opacity: 0.05; }
+    }
+
+    /* 布局 */
+    .login-wrap {
+      position: relative;
+      z-index: 5;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .login-panel {
+      width: min(560px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(255,0,60,0.35);
+      background: rgba(10, 0, 5, 0.85);
+      backdrop-filter: blur(12px);
+      padding: 22px;
+      box-shadow: 0 0 30px rgba(255,0,60,0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* HUD 角标 */
+    .login-panel::before {
+      content: "";
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 18px;
+      height: 18px;
+      border-top: 2px solid rgba(255,0,60,0.55);
+      border-right: 2px solid rgba(255,0,60,0.55);
+      opacity: 0.8;
+    }
+
+    .login-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(255,0,60,0.14), transparent);
+      transform: translateX(-120%);
+      animation: shine 5s infinite;
+      pointer-events: none;
+    }
+
+    @keyframes shine {
+      0% { transform: translateX(-120%); }
+      50% { transform: translateX(120%); }
+      100% { transform: translateX(120%); }
+    }
+
+    .login-title {
+      font-size: 15px;
+      letter-spacing: 2px;
+      color: rgba(255, 60, 60, 0.95);
+      text-shadow: 0 0 14px rgba(255,0,60,0.35);
+      margin-bottom: 4px;
+    }
+
+    .login-subtitle {
+      font-size: 9px;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 1px;
+      margin-bottom: 18px;
+      line-height: 1.8;
+    }
+
+    /* 终端框 */
+    .terminal-box {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(255,255,255,0.03);
+      margin-bottom: 16px;
+      font-size: 9px;
+      line-height: 1.8;
+      color: rgba(255,255,255,0.75);
+      min-height: 110px;
+      white-space: pre-line;
+      overflow-y: auto;
+      max-height: 180px;
+    }
+
+    .terminal-box.warn {
+      border-color: rgba(255,0,60,0.45);
+      box-shadow: 0 0 18px rgba(255,0,60,0.15);
+      animation: terminalFlicker 0.25s infinite;
+    }
+
+    @keyframes terminalFlicker {
+      0% { filter: brightness(1); }
+      50% { filter: brightness(1.25); }
+      100% { filter: brightness(1); }
+    }
+
+    /* 表单 */
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .label {
+      font-size: 9px;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 1px;
+    }
+
+    .input {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,0,60,0.28);
+      background: rgba(255,0,60,0.06);
+      color: rgba(255,255,255,0.92);
+      outline: none;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    .input:focus {
+      border-color: rgba(255,0,60,0.55);
+      box-shadow: 0 0 16px rgba(255,0,60,0.18);
+    }
+
+    /* 按钮 */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .cyber-btn {
+      flex: 1;
+      min-width: 150px;
+      border: 1px solid rgba(255,0,60,0.35);
+      background: rgba(255,0,60,0.06);
+      color: rgba(255,255,255,0.88);
+      padding: 12px;
+      border-radius: 999px;
+      font-size: 9px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .cyber-btn:hover {
+      border-color: rgba(255,0,60,0.75);
+      box-shadow: 0 0 18px rgba(255,0,60,0.18);
+      transform: translateY(-2px);
+    }
+
+    .danger {
+      border-color: rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .danger:hover {
+      border-color: rgba(255,0,60,0.65);
+    }
+
+    /* 进度条 */
+    .progress {
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      overflow: hidden;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255,0,60,0.9), rgba(255,80,0,0.85));
+      transition: 0.2s ease;
+    }
+
+    /* 底部提示 */
+    .footer-tip {
+      margin-top: 14px;
+      font-size: 8px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    /* Glitch 效果 */
+    .glitch {
+      position: relative;
+      display: inline-block;
+    }
+
+    .glitch::before,
+    .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      opacity: 0.65;
+      clip-path: inset(0 0 0 0);
+    }
+
+    .glitch::before {
+      transform: translate(2px, -1px);
+      color: rgba(255,0,60,0.8);
+      animation: glitch 2s infinite;
+    }
+
+    .glitch::after {
+      transform: translate(-2px, 1px);
+      color: rgba(255,160,0,0.7);
+      animation: glitch 1.6s infinite;
+    }
+
+    @keyframes glitch {
+      0% { clip-path: inset(0 0 0 0); }
+      10% { clip-path: inset(20% 0 60% 0); }
+      20% { clip-path: inset(55% 0 20% 0); }
+      30% { clip-path: inset(10% 0 70% 0); }
+      40% { clip-path: inset(45% 0 35% 0); }
+      50% { clip-path: inset(0 0 0 0); }
+      60% { clip-path: inset(30% 0 50% 0); }
+      70% { clip-path: inset(60% 0 15% 0); }
+      80% { clip-path: inset(15% 0 65% 0); }
+      90% { clip-path: inset(40% 0 30% 0); }
+      100% { clip-path: inset(0 0 0 0); }
+    }
+
+    /* 防火墙弹窗 */
+    .firewall-alert {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: min(360px, calc(100% - 40px));
+      border-radius: 16px;
+      border: 1px solid rgba(255,0,60,0.45);
+      background: rgba(10, 0, 5, 0.88);
+      backdrop-filter: blur(10px);
+      padding: 14px;
+      box-shadow: 0 0 24px rgba(255,0,60,0.18);
+      z-index: 50;
+      display: none;
+      animation: pop 0.3s ease;
+    }
+
+    @keyframes pop {
+      from { transform: translateY(-12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .firewall-title {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: rgba(255,60,60,0.95);
+      margin-bottom: 6px;
+    }
+
+    .firewall-text {
+      font-size: 9px;
+      color: rgba(255,255,255,0.72);
+      line-height: 1.9;
+      white-space: pre-line;
+    }
+
+    .firewall-close {
+      margin-top: 10px;
+      display: inline-block;
+      font-size: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,0,60,0.35);
+      background: rgba(255,0,60,0.06);
+      cursor: pointer;
+      color: rgba(255,255,255,0.85);
+      transition: 0.2s ease;
+    }
+
+    .firewall-close:hover {
+      border-color: rgba(255,0,60,0.75);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="login-bg"></div>
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+  <div class="alarm-flash" id="alarmFlash"></div>
+
+  <!-- 防火墙警告弹窗 -->
+  <div class="firewall-alert" id="firewallAlert">
+    <div class="firewall-title glitch" data-text="BLACKWALL FIREWALL ALERT">
+      BLACKWALL FIREWALL ALERT
+    </div>
+    <div class="firewall-text" id="firewallText">
+      [WARNING] INTRUSION DETECTED.
+      [SYS] TRACE SIGNAL LOCKED.
+      [ACTION] SECURITY ICE DEPLOYED.
+    </div>
+    <div class="firewall-close" onclick="closeFirewall()">关闭警告 / DISMISS</div>
+  </div>
+
+  <div class="login-wrap">
+    <div class="login-panel">
+
+      <div class="login-title glitch" data-text="ACCESS TERMINAL">
+        ACCESS TERMINAL
+      </div>
+
+      <div class="login-subtitle">
+        黑墙认证节点已激活。<br/>
+        请提交身份信息以进入 CYBER PROFILE CORE.
+      </div>
+
+      <div class="terminal-box" id="terminalBox">
+[BOOT] RED CHANNEL ONLINE...
+[SYS] WAITING FOR INPUT...
+      </div>
+
+      <div class="form-row">
+        <div class="label">用户名 / USERNAME</div>
+        <input class="input" id="userInput" placeholder="输入代号..." autocomplete="off"/>
+      </div>
+
+      <div class="form-row">
+        <div class="label">密码 / PASSWORD</div>
+        <input class="input" id="passInput" type="password" placeholder="输入密钥..." autocomplete="off"/>
+      </div>
+
+      <div class="btn-row">
+        <button class="cyber-btn" id="loginBtn">连接 / CONNECT</button>
+        <button class="cyber-btn danger" id="abortBtn">终止 / ABORT</button>
+      </div>
+
+      <div class="progress" id="progressBox">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div class="footer-tip">
+        ※ 此登录界面为视觉模块，不包含真实验证逻辑。
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const terminal = document.getElementById("terminalBox");
+    const loginBtn = document.getElementById("loginBtn");
+    const abortBtn = document.getElementById("abortBtn");
+    const progressBox = document.getElementById("progressBox");
+    const progressBar = document.getElementById("progressBar");
+    const alarmFlash = document.getElementById("alarmFlash");
+    const firewallAlert = document.getElementById("firewallAlert");
+    const firewallText = document.getElementById("firewallText");
+
+    function logLine(text) {
+      terminal.innerText += "\n" + text;
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function showFirewall(msg) {
+      firewallText.innerText = msg;
+      firewallAlert.style.display = "block";
+      alarmFlash.classList.add("active");
+    }
+
+    function closeFirewall() {
+      firewallAlert.style.display = "none";
+      alarmFlash.classList.remove("active");
+    }
+
+    window.closeFirewall = closeFirewall;
+
+    function triggerErrorFlash() {
+      terminal.classList.add("warn");
+      alarmFlash.classList.add("active");
+
+      setTimeout(() => {
+        terminal.classList.remove("warn");
+        alarmFlash.classList.remove("active");
+      }, 1200);
+    }
+
+    function fakeLoginSequence() {
+      progressBox.style.display = "block";
+      progressBar.style.width = "0%";
+      closeFirewall();
+
+      terminal.innerText =
+        "[BOOT] RED CHANNEL ONLINE...\n" +
+        "[SYS] AUTHENTICATION START...\n" +
+        "[TRACE] LINKING TO BLACKWALL...\n";
+
+      let p = 0;
+      const timer = setInterval(() => {
+        p += Math.floor(Math.random() * 18) + 6;
+        if (p > 100) p = 100;
+        progressBar.style.width = p + "%";
+
+        if (p > 15 && p < 35) logLine("[TRACE] CHECKING USER ID...");
+        if (p > 35 && p < 55) logLine("[TRACE] VERIFYING ACCESS KEY...");
+        if (p > 55 && p < 75) logLine("[TRACE] DECRYPTING TOKEN...");
+        if (p > 75 && p < 95) logLine("[TRACE] FIREWALL SCAN RUNNING...");
+
+        if (p >= 100) {
+          clearInterval(timer);
+
+          // 随机结果（你可以改成固定成功）
+          const ok = Math.random() > 0.35;
+
+          if (ok) {
+            logLine("");
+            logLine("[OK] ACCESS GRANTED.");
+            logLine("[SYS] REDIRECTING TO CORE...");
+
+            setTimeout(() => {
+              window.location.href = "./index.html";
+            }, 1400);
+
+          } else {
+            logLine("");
+            logLine("[ERR] ACCESS DENIED.");
+            logLine("[SYS] SECURITY BREACH DETECTED!");
+            logLine("[SYS] DEPLOYING ICE COUNTERMEASURE...");
+            logLine("[SYS] CONNECTION LOCKED.");
+
+            triggerErrorFlash();
+
+            showFirewall(
+              "[BLACKWALL] FIREWALL ALERT\n\n" +
+              "[WARNING] UNAUTHORIZED ACCESS ATTEMPT.\n" +
+              "[TRACE] SIGNAL LOCKED.\n" +
+              "[ICE] COUNTERMEASURE DEPLOYED.\n" +
+              "[ACTION] SESSION BLOCKED."
+            );
+
+            progressBox.style.display = "none";
+          }
+        }
+      }, 240);
+    }
+
+    loginBtn.addEventListener("click", fakeLoginSequence);
+
+    abortBtn.addEventListener("click", () => {
+      terminal.innerText = "[SYS] CONNECTION TERMINATED.\n[BOOT] SAFE EXIT.";
+      progressBox.style.display = "none";
+      progressBar.style.width = "0%";
+      closeFirewall();
+
+      setTimeout(() => {
+        window.location.href = "./index.html";
+      }, 900);
+    });
+
+    // 回车触发
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") fakeLoginSequence();
+      if (e.key === "Escape") abortBtn.click();
+    });
+  </script>
+
+</body>
+</html>
